@@ -1,0 +1,19 @@
+{
+  "name": "tsflow",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel src/index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel-bundler": "^1.10.3",
+    "typescript": "^3.2.1"
+  },
+  "dependencies": {
+    "lit-html": "^0.14.0"
+  }
+}
