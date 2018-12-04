@@ -1,7 +1,7 @@
 import { app } from './app'
 import { event, EventSource, Snapshot } from './signal'
-import { html, TemplateResult } from 'lit-html'
-import { renderLit } from './render-lit-html'
+import { html } from 'lit-html'
+import { LitView, renderLit } from './render-lit-html'
 import { taskOf } from './task'
 
 const pipe = <A, B, C> (f: (a: A) => B, g: (b: B) => C): (a: A) => C =>
@@ -14,7 +14,7 @@ const counter = (c: number, { inc, dec }: Snapshot<CounterEvents>): [number, {}]
   return [result, {}]
 }
 
-const counterView = (c: number): [TemplateResult, CounterEvents] => {
+const counterView = (c: number): LitView<CounterEvents> => {
   const inc = event()
   const dec = event()
   const t = html`
