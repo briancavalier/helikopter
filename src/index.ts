@@ -52,9 +52,8 @@ const handle = <A> (h: Handler<A>, { handlers }: Event<A>): Unhandle => {
 const ifOccurred = <A, B> (e: Occurrence<B>, yes: A, no: A): A =>
   e ? yes : no
 
-type Snapshot<T> = T extends Event<infer A>
-  ? Occurrence<A>
-  : { [K in keyof T]: Snapshot<T> }
+type Snapshot<T> = T extends Event<infer A> ? Occurrence<A>
+  : { [K in keyof T]: Snapshot<T[K]> }
 
 const snapshot = <T> (t: Task<T>): Task<Snapshot<T>> =>
   new Task(f => {
@@ -96,14 +95,14 @@ const run = <VT, S, T> (update: (s: S, e: Snapshot<T & VT>) => [S, Task<T>], ren
     es => run(update, render, ...update(s, es)),
     snapshot(merge(t, render(s))))
 
-type CounterEvents = { inc: Occurrence<unknown>, dec: Occurrence<unknown> }
+type CounterEvents = { inc: Occurrence<any>, dec: Occurrence<any> }
 
 const counter = (c: number, { inc, dec }: CounterEvents): [number, Task<{}>] => {
   const result = c + ifOccurred(inc, 1, 0) - ifOccurred(dec, 1, 0)
   return [result, taskOf({})]
 }
 
-const counterView = (c: number): [TemplateResult, { inc: Event<unknown>, dec: Event<unknown> }] => {
+const counterView = (c: number): [TemplateResult, { inc: Event<any>, dec: Event<any> }] => {
   const inc = event()
   const dec = event()
   const t = html`
