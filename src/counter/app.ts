@@ -16,5 +16,5 @@ const _run = <A, S> (app: App<S, A>, s: AppState<S, A>, i: ReadonlyArray<Task<A>
   [...i, rt].forEach(t => t.runTask(step))
 }
 
-export const run = <A, S> (app: App<S, A>, state: S): void =>
-  _run(app, { state, actions: [] }, [])
+export const run = <S, A> (updateState: UpdateState<S, A>, updateView: UpdateView<S, A>, state: S): void =>
+  _run({ updateState, updateView }, { state, actions: [] }, [])

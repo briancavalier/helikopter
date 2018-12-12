@@ -20,8 +20,8 @@ const counter = (s: number, c: CounterAction): [number, ReadonlyArray<Task<Count
     case 'dec': return [s - 1, []]
     case 'reset': return [0, []]
     case 'delayinc':
-    return [s, [delay(1000, 'inc' as CounterAction)]]
+      return [s, [delay(1000, 'inc' as CounterAction)]]
   }
 }
 
-run({ updateState: counter, updateView: s => render(counterView(s), document.body) }, 0)
+run(counter, s => render(counterView(s), document.body), 0)
