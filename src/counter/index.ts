@@ -1,4 +1,4 @@
-import { delay, Task } from './task'
+import { delay, Effect, Fiber } from './effect'
 import { html } from 'lit-html'
 import { render } from './lit'
 import { run } from './app'
@@ -14,13 +14,14 @@ const counterView = (c: number) => html`
   </p>
 `
 
-const counter = (s: number, c: CounterAction): [number, ReadonlyArray<Task<CounterAction>>] => {
-  switch (c) {
+const counter = (s: number, a: CounterAction): [number, ReadonlyArray<Effect<CounterAction>>] => {
+  switch (a) {
     case 'inc': return [s + 1, []]
     case 'dec': return [s - 1, []]
     case 'reset': return [0, []]
     case 'delayinc':
-      return [s, [delay(1000, 'inc' as CounterAction)]]
+      const d = delay(1000, 'inc' as CounterAction)
+      return [s, [d]]
   }
 }
 

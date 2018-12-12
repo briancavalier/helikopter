@@ -1,8 +1,8 @@
 import { directive, EventPart, Part, render as lrender, TemplateResult } from 'lit-html'
-import { Task } from './task'
+import { Effect } from './effect'
 
-export const render = <I> (t: TemplateResult, el: Element): Task<I> =>
-  new Task<I>(f => {
+export const render = <I> (t: TemplateResult, el: Element): Effect<I> =>
+  new Effect<I>(f => {
     const newValues = t.values.map(x => intent(f, x))
     const nt = new TemplateResult(t.strings, newValues, t.type, t.processor)
     const id = requestAnimationFrame(() => lrender(nt, el))

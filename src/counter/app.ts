@@ -1,20 +1,35 @@
-import { render, TemplateResult } from 'lit-html'
-import { Task } from './task'
+import { Effect, Fiber, joinFiber, select } from './effect'
 
-type UpdateState<S, A> = (s: S, i: A) => [S, ReadonlyArray<Task<A>>]
-type UpdateView<S, A> = (s: S) => Task<A>
-type App<S, A> = { updateState: UpdateState<S, A>, updateView: UpdateView<S, A> }
-type AppState<S, A> = { state: S, actions: A[] }
-
-const _run = <A, S> (app: App<S, A>, s: AppState<S, A>, i: ReadonlyArray<Task<A>>): void => {
-  const rt: Task<A> = app.updateView(s.state)
-  const step = (i: A) => {
-    const [st, t] = app.updateState(s.state, i)
-    s.state = st
-    _run(app, s, t)
-  }
-  [...i, rt].forEach(t => t.runTask(step))
-}
+export type UpdateState<S, A> = (s: S, a: A, i: ReadonlyArray<Fiber<A>>) => [S, ReadonlyArray<Effect<A>>]
+export type UpdateView<S, A> = (s: S) => Effect<A>
+export type App<S, A> = { state: S, updateState: UpdateState<S, A>, updateView: UpdateView<S, A> }
 
 export const run = <S, A> (updateState: UpdateState<S, A>, updateView: UpdateView<S, A>, state: S): void =>
-  _run({ updateState, updateView }, { state, actions: [] }, [])
+  step({ updateState, updateView, state }, [], [])
+
+const step = <S, A> (app: App<S, A>, effects: ReadonlyArray<Effect<A>>, fibers: ReadonlyArray<Fiber<A>>): void => {
+  const renderEffect: Effect<A> = app.updateView(app.state)
+  const newFibers = [renderEffect, ...effects].map(e => e.runEffect())
+  return select(fs => handleStep(app, fs), [...fibers, ...newFibers])
+}
+
+const handleStep = <S, A> (app: App<S, A>, fs: ReadonlyArray<Fiber<A>>): void => {
+  const [actions, pendingFibers] = partition(fs)
+  const newEffects = [] as Effect<A>[]
+  for (const a of actions) {
+    const [st, neff] = app.updateState(app.state, a, pendingFibers)
+    app.state = st;
+    newEffects.push(...neff)
+  }
+  return step(app, newEffects, pendingFibers)
+}
+
+const partition = <A> (fs: ReadonlyArray<Fiber<A>>): [ReadonlyArray<A>, ReadonlyArray<Fiber<A>>] => {
+  const aa = [] as A[]
+  const fa = [] as Fiber<A>[]
+  for (const f of fs) {
+    if (f.state.status === 0) fa.push(f)
+    else if (f.state.status === 1) aa.push(f.state.value)
+  }
+  return [aa, fa]
+}
