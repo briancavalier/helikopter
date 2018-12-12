@@ -24,4 +24,4 @@ const counterView = (c: number): LitView<CounterEvents> => {
 }
 
 app(counter, pipe(counterView, renderLit), 0, taskOf({}))
-  .run(x => console.log(x))
+  .runTask(x => console.log(x))

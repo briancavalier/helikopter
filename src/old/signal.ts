@@ -10,7 +10,7 @@ export class EventSource<A> {
 
 export const event = <A> (): EventSource<A> => new EventSource<A>()
 
-export const handle = <A> (h: Handler<A>, { handlers }: EventSource<A>): Unhandle => {
+export const addHandler = <A> (h: Handler<A>, { handlers }: EventSource<A>): Unhandle => {
   handlers.push(h)
   return () => removeHandler(handlers.indexOf(h), handlers)
 }
@@ -31,7 +31,7 @@ export const snapshot = <T> (t: T): Task<Snapshot<T>> =>
     for (const k of keys) {
       const s = t[k]
       if (s instanceof EventSource) {
-        const u = handle(e => {
+        const u = addHandler(e => {
           cancel()
           const vs = {} as Snapshot<T>
           for (const ks of keys) {
