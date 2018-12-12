@@ -1,5 +1,5 @@
 import { render, TemplateResult } from 'lit-html'
-import { Task } from '../old/task'
+import { Task } from './task'
 
 type UpdateState<S, A> = (s: S, i: A) => [S, ReadonlyArray<Task<A>>]
 type UpdateView<S, A> = (s: S) => Task<A>
