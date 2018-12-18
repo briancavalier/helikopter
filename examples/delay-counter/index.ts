@@ -1,5 +1,5 @@
-import { App, run, Update } from '../../src/app'
-import { delay, Effect, mapTo } from '../../src/effect'
+import { run, Update } from '../../src/app'
+import { delay, mapTo } from '../../src/effect'
 import { Fiber, killWith } from '../../src/fiber'
 import { render } from '../../src/lit'
 import { html } from 'lit-html'
