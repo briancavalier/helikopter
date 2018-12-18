@@ -12,7 +12,6 @@ type AppState<S, A> = { state: S, updateState: UpdateState<S, A>, updateView: Up
 
 const step = <S, A> (app: AppState<S, A>, effects: ReadonlyArray<Effect<A>>, inflight: ReadonlyArray<Fiber<A>>): void => {
   const rendering = fork(app.updateView(app.state));
-  (rendering as any).tag = "rendering"
   const started = effects.map(fork)
   select(fs => {
     fork(kill(rendering))
@@ -22,7 +21,6 @@ const step = <S, A> (app: AppState<S, A>, effects: ReadonlyArray<Effect<A>>, inf
 
 const handleStep = <S, A> (app: AppState<S, A>, fs: ReadonlyArray<Fiber<A>>): void => {
   const [actions, pendingFibers] = partition(fs)
-  console.log(pendingFibers)
   const newEffects = [] as Effect<A>[]
   for (const a of actions) {
     const [st, neff] = app.updateState(app.state, a, pendingFibers)
