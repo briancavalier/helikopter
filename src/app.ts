@@ -3,31 +3,31 @@ import { Fiber, kill, select } from './fiber'
 
 export type UpdateState<S, A> = (s: S, a: A, i: ReadonlyArray<Fiber<A>>) => [S, ReadonlyArray<Effect<A>>]
 export type UpdateView<S, A> = (s: S) => Effect<A>
-export type App<S, A> = { updateState: UpdateState<S, A>, updateView: UpdateView<S, A> }
+export type Update<S, A> = { state: S, effects: ReadonlyArray<Effect<A>> }
+export type App<S, A> = { updateState: UpdateState<S, A>, updateView: UpdateView<S, A> } & Update<S, A>
 
-export const run = <S, A> (app: App<S, A>, state: S, initEffects: ReadonlyArray<Effect<A>> = []): void =>
-  step({ ...app, state }, initEffects, [])
+export const run = <S, A> (app: App<S, A>): void =>
+  step(app, [])
 
-type AppState<S, A> = { state: S, updateState: UpdateState<S, A>, updateView: UpdateView<S, A> }
-
-const step = <S, A> (app: AppState<S, A>, effects: ReadonlyArray<Effect<A>>, inflight: ReadonlyArray<Fiber<A>>): void => {
+const step = <S, A> (app: App<S, A>, inflight: ReadonlyArray<Fiber<A>>): void => {
   const rendering = fork(app.updateView(app.state));
-  const started = effects.map(fork)
+  const started = app.effects.map(fork)
   select(fs => {
     fork(kill(rendering))
     handleStep(app, fs)
   }, [...inflight, ...started, rendering])
 }
 
-const handleStep = <S, A> (app: AppState<S, A>, fs: ReadonlyArray<Fiber<A>>): void => {
+const handleStep = <S, A> (app: App<S, A>, fs: ReadonlyArray<Fiber<A>>): void => {
   const [actions, pendingFibers] = partition(fs)
-  const newEffects = [] as Effect<A>[]
+  const effects = [] as Effect<A>[]
+  let state = app.state
   for (const a of actions) {
-    const [st, neff] = app.updateState(app.state, a, pendingFibers)
-    app.state = st;
-    newEffects.push(...neff)
+    const [s, e] = app.updateState(state, a, pendingFibers)
+    state = s
+    effects.push(...e)
   }
-  return step(app, newEffects, pendingFibers)
+  return step({ ...app, state, effects }, pendingFibers)
 }
 
 const partition = <A> (fs: ReadonlyArray<Fiber<A>>): [ReadonlyArray<A>, ReadonlyArray<Fiber<A>>] => {

@@ -1,7 +1,7 @@
-import { App, run } from './app'
-import { delay, Effect, mapTo } from './effect'
-import { Fiber, killWith } from './fiber'
-import { render } from './lit'
+import { App, run } from '../../src/app'
+import { delay, Effect, mapTo } from '../../src/effect'
+import { Fiber, killWith } from '../../src/fiber'
+import { render } from '../../src/lit'
 import { html } from 'lit-html'
 
 type CounterAction = 'inc' | 'dec' | 'reset count' | 'delay' | 'cancel delays' | 'none'
@@ -35,9 +35,9 @@ const counter = (s: CounterState, a: CounterAction, fs: ReadonlyArray<Fiber<Coun
   }
 }
 
-const app: App<CounterState, CounterAction> = {
+run({
   updateState: counter,
-  updateView: s => render(counterView(s), document.body)
-}
-
-run(app, { count: 0, delayed: 0 })
+  updateView: s => render(counterView(s), document.body),
+  state: { count: 0, delayed: 0 },
+  effects: []
+})
