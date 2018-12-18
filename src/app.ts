@@ -6,28 +6,27 @@ export type UpdateView<S, A> = (s: S) => Effect<A>
 export type Update<S, A> = { state: S, effects: ReadonlyArray<Effect<A>> }
 export type App<S, A> = { updateState: UpdateState<S, A>, updateView: UpdateView<S, A> } & Update<S, A>
 
-export const run = <S, A> (app: App<S, A>): void =>
-  step(app, [])
+export const run = <S, A> ({ updateState, updateView, state, effects }: App<S, A>): void =>
+  step(updateState, updateView, state, effects, [])
 
-const step = <S, A> (app: App<S, A>, inflight: ReadonlyArray<Fiber<A>>): void => {
-  const rendering = fork(app.updateView(app.state));
-  const started = app.effects.map(fork)
+const step = <S, A> (updateState: UpdateState<S, A>, updateView: UpdateView<S, A>, state: S, effects: ReadonlyArray<Effect<A>>, inflight: ReadonlyArray<Fiber<A>>): void => {
+  const rendering = fork(updateView(state));
+  const started = effects.map(fork)
   select(fs => {
     fork(kill(rendering))
-    handleStep(app, fs)
+    handleStep(updateState, updateView, state, fs)
   }, [...inflight, ...started, rendering])
 }
 
-const handleStep = <S, A> (app: App<S, A>, fs: ReadonlyArray<Fiber<A>>): void => {
+const handleStep = <S, A> (updateState: UpdateState<S, A>, updateView: UpdateView<S, A>, state: S, fs: ReadonlyArray<Fiber<A>>): void => {
   const [actions, pendingFibers] = partition(fs)
   const effects = [] as Effect<A>[]
-  let state = app.state
   for (const a of actions) {
-    const [s, e] = app.updateState(state, a, pendingFibers)
+    const [s, e] = updateState(state, a, pendingFibers)
     state = s
     effects.push(...e)
   }
-  return step({ ...app, state, effects }, pendingFibers)
+  return step(updateState, updateView, state, effects, pendingFibers)
 }
 
 const partition = <A> (fs: ReadonlyArray<Fiber<A>>): [ReadonlyArray<A>, ReadonlyArray<Fiber<A>>] => {
