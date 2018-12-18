@@ -1,5 +1,5 @@
 import { App, run } from './app'
-import { delay, Effect } from './effect'
+import { delay, Effect, mapTo } from './effect'
 import { Fiber, killWith } from './fiber'
 import { render } from './lit'
 import { html } from 'lit-html'
@@ -12,7 +12,8 @@ type CounterState = {
 }
 
 const counterView = ({ count, delayed }: CounterState) => html`
-  <p>${count} (delayed: ${delayed})
+  <p>${count} (delayed: ${delayed})</p>
+  <p>
     <button @click=${'inc'}>+</button>
     <button @click=${'dec'}>-</button>
     <button @click=${'reset count'} ?disabled=${count === 0}>Reset Count</button>
@@ -27,7 +28,7 @@ const counter = (s: CounterState, a: CounterAction, fs: ReadonlyArray<Fiber<Coun
     case 'dec': return [{ count: s.count - 1, delayed: fs.length }, []]
     case 'reset count': return [{ count: 0, delayed: fs.length }, []]
     case 'delay':
-      const d = delay(1000, 'inc' as CounterAction)
+      const d = mapTo('inc' as CounterAction, delay(1000))
       return [{ ...s, delayed: fs.length + 1 }, [d]]
     case 'cancel delays': return [{ ...s, delayed: 0 }, fs.map(f => killWith('none', f))]
     default: return [s, []]
