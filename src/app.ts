@@ -1,5 +1,5 @@
-import { Effect, fork } from './effect'
-import { Fiber, kill, select } from './fiber'
+import { Effect } from './effect'
+import { Fiber, fork, kill, select } from './fiber'
 
 export type Update<S, A> = [S, ReadonlyArray<Effect<A>>]
 export type UpdateState<S, A> = (s: S, a: A, i: ReadonlyArray<Fiber<A>>) => Update<S, A>

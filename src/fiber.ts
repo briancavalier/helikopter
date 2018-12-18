@@ -1,4 +1,4 @@
-import { Cancel, Effect, effect, mapTo, pure } from './effect'
+import { Cancel, Effect, effect, mapTo, pure, PureEffect } from './effect'
 
 export type Handler<A> = (a: A) => void
 export type Unhandle = () => void
@@ -24,6 +24,14 @@ export const complete = <A> (value: A, f: Fiber<A>): void => {
   const handlers = f.state.handlers
   f.state = { status: 1, value }
   handlers.forEach(h => h(f))
+}
+
+export const fork = <A> (e: Effect<A>): Fiber<A> => {
+  if (e instanceof PureEffect) return fiberOf(e.value)
+
+  const fiber = createFiber<A>(() => cancel())
+  const cancel = e.runEffect(a => complete(a, fiber))
+  return fiber
 }
 
 export const kill = <A> (f: Fiber<A>): Effect<void> => {

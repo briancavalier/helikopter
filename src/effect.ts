@@ -1,4 +1,3 @@
-import { complete, createFiber, Fiber, fiberOf } from './fiber'
 
 export type Cancel = () => void
 
@@ -10,16 +9,6 @@ export class RunEffect<A> {
 
 export class PureEffect<A> {
   constructor (public readonly value: A) {}
-}
-
-export const fork = <A> (e: Effect<A>): Fiber<A> => {
-  if (e instanceof PureEffect) {
-    return fiberOf(e.value)
-  }
-
-  const fiber = createFiber<A>(() => cancel())
-  const cancel = e.runEffect(a => complete(a, fiber))
-  return fiber
 }
 
 export const effect = <A> (runEffect: (f: (a: A) => void) => Cancel): Effect<A> =>
