@@ -1,4 +1,4 @@
-import { App, run } from '../../src/app'
+import { App, run, Update } from '../../src/app'
 import { delay, Effect, mapTo } from '../../src/effect'
 import { Fiber, killWith } from '../../src/fiber'
 import { render } from '../../src/lit'
@@ -22,7 +22,7 @@ const counterView = ({ count, delayed }: CounterState) => html`
   </p>
 `
 
-const counter = (s: CounterState, a: CounterAction, fs: ReadonlyArray<Fiber<CounterAction>>): [CounterState, ReadonlyArray<Effect<CounterAction>>] => {
+const counter = (s: CounterState, a: CounterAction, fs: ReadonlyArray<Fiber<CounterAction>>): Update<CounterState, CounterAction> => {
   switch (a) {
     case 'inc': return [{ count: s.count + 1, delayed: fs.length }, []]
     case 'dec': return [{ count: s.count - 1, delayed: fs.length }, []]

@@ -1,10 +1,16 @@
 import { Effect, fork } from './effect'
 import { Fiber, kill, select } from './fiber'
 
-export type UpdateState<S, A> = (s: S, a: A, i: ReadonlyArray<Fiber<A>>) => [S, ReadonlyArray<Effect<A>>]
+export type Update<S, A> = [S, ReadonlyArray<Effect<A>>]
+export type UpdateState<S, A> = (s: S, a: A, i: ReadonlyArray<Fiber<A>>) => Update<S, A>
 export type UpdateView<S, A> = (s: S) => Effect<A>
-export type Update<S, A> = { state: S, effects: ReadonlyArray<Effect<A>> }
-export type App<S, A> = { updateState: UpdateState<S, A>, updateView: UpdateView<S, A> } & Update<S, A>
+
+export type App<S, A> = {
+  updateState: UpdateState<S, A>,
+  updateView: UpdateView<S, A>,
+  state: S,
+  effects: ReadonlyArray<Effect<A>>
+}
 
 export const run = <S, A> ({ updateState, updateView, state, effects }: App<S, A>): void =>
   step(updateState, updateView, state, effects, [])
