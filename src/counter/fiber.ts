@@ -1,4 +1,4 @@
-import { Cancel, Effect, effect, pure } from './effect'
+import { Cancel, Effect, effect, mapTo, pure } from './effect'
 
 export type Handler<A> = (a: A) => void
 export type Unhandle = () => void
@@ -39,6 +39,9 @@ export const kill = <A> (f: Fiber<A>): Effect<void> => {
     return () => {}
   })
 }
+
+export const killWith = <A> (a: A, f: Fiber<A>): Effect<A> =>
+  mapTo(a, kill(f))
 
 export const select = <A> (h: Handler<ReadonlyArray<Fiber<A>>>, fs: ReadonlyArray<Fiber<A>>): Unhandle => {
   const ready = fs.some(f => f.state.status !== 0)
