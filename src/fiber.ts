@@ -1,10 +1,19 @@
-import { Cancel, Effect, effect, mapTo, pure, PureEffect } from './effect'
+import {
+  Cancel,
+  Effect,
+  effect,
+  Handler,
+  mapTo,
+  pure,
+  PureEffect,
+  runEffect,
+  RunEffect
+  } from './effect'
 
-export type Handler<A> = (a: A) => void
 export type Unhandle = () => void
 
 export type FiberState<A> =
-  | { status: 0, cancel: Cancel, handlers: Handler<Fiber<A>>[] }
+  | { status: 0, cancel: Cancel, handlers: ((f: Fiber<A>) => void)[] }
   | { status: 1, value: A }
   | { status: -1 }
 
@@ -26,32 +35,32 @@ export const complete = <A> (value: A, f: Fiber<A>): void => {
   handlers.forEach(h => h(f))
 }
 
-export const fork = <A> (e: Effect<A>): Fiber<A> => {
+export const fork = <E, A> (h: Handler<E, A>, e: Effect<E, A>): Fiber<A> => {
   if (e instanceof PureEffect) return fiberOf(e.value)
 
   const fiber = createFiber<A>(() => cancel())
-  const cancel = e.runEffect(a => complete(a, fiber))
+  const cancel: Cancel = runEffect(a => complete(a, fiber), h, e)
   return fiber
 }
 
-export const kill = <A> (f: Fiber<A>): Effect<void> => {
+export const kill = <A> (f: Fiber<A>): Effect<never, void> => {
   if (f.state.status !== 0) return pure(undefined)
-  else return effect(g => {
+  else return new RunEffect<never, void>((_, g) => {
     if (f.state.status === 0) {
       const cancel = f.state.cancel
       f.state = { status: -1 }
       cancel()
     }
 
-    g()
+    g(undefined)
     return () => {}
   })
 }
 
-export const killWith = <A> (a: A, f: Fiber<A>): Effect<A> =>
+export const killWith = <A> (a: A, f: Fiber<A>): Effect<never, A> =>
   mapTo(a, kill(f))
 
-export const select = <A> (h: Handler<ReadonlyArray<Fiber<A>>>, fs: ReadonlyArray<Fiber<A>>): Unhandle => {
+export const select = <A> (h: (fs: ReadonlyArray<Fiber<A>>) => void, fs: ReadonlyArray<Fiber<A>>): Unhandle => {
   const ready = fs.some(f => f.state.status !== 0)
   if (ready) {
     h(fs)
@@ -69,7 +78,7 @@ export const select = <A> (h: Handler<ReadonlyArray<Fiber<A>>>, fs: ReadonlyArra
   return unhandleAll
 }
 
-const join = <A> (h: Handler<Fiber<A>>, f: Fiber<A>): Unhandle => {
+const join = <A> (h: (f: Fiber<A>) => void, f: Fiber<A>): Unhandle => {
   if(f.state.status === -1) return () => {}
   else if(f.state.status === 0) return addToHandlers(h, f.state.handlers)
 
@@ -77,11 +86,11 @@ const join = <A> (h: Handler<Fiber<A>>, f: Fiber<A>): Unhandle => {
   return () => {}
 }
 
-const addToHandlers = <A> (h: Handler<A>, handlers: Handler<A>[]): Unhandle => {
+const addToHandlers = <A> (h: (a: A) => void, handlers: ((a: A) => void)[]): Unhandle => {
   handlers.push(h)
   return () => removeFromHandlers(handlers.indexOf(h), handlers)
 }
 
-const removeFromHandlers = <A> (i: number, handlers: Handler<A>[]): void => {
+const removeFromHandlers = <A> (i: number, handlers: ((a: A) => void)[]): void => {
   if (i >= 0) handlers.splice(i, 1)
 }
