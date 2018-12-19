@@ -3,9 +3,11 @@ export type Cancel = () => void
 export type Cont<A> = (a: A) => void
 export type Handler<E, A> = (e: E, k: (a: A) => void) => Cancel
 
+export type Fx<T, A> = { type: T } & A
+
 export class Effect<E, A> {}
 
-export class PureEffect<A> extends Effect<never, A> {
+export class NoEffect<A> extends Effect<never, A> {
   constructor (public readonly value: A) { super() }
 }
 
@@ -21,10 +23,10 @@ export const effect = <E, A> (op: E): Effect<E, A> =>
   new AnEffect(op)
 
 export const pure = <A> (a: A): Effect<never, A> =>
-  new PureEffect(a)
+  new NoEffect(a)
 
 export const runEffect = <E, A> (f: (a: A) => void, h: Handler<E, A>, eff: Effect<E, A>): Cancel => {
-  if (eff instanceof PureEffect) {
+  if (eff instanceof NoEffect) {
     f(eff.value)
     return () => {}
   }
@@ -37,5 +39,6 @@ export const mapTo = <E, A, B> (b: B, e: Effect<E, A>): Effect<E, B> =>
   new RunEffect((h: Handler<E, B>, k) =>
     runEffect(_ => k(b), h, e))
 
-export const delay = (ms: number): Effect<{ type: 'delay', ms: number }, void> =>
+export type Delay = Fx<'delay', { ms: number }>
+export const delay = (ms: number): Effect<Delay, void> =>
   new AnEffect({ type: 'delay', ms })

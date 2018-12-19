@@ -4,8 +4,8 @@ import {
   effect,
   Handler,
   mapTo,
+  NoEffect,
   pure,
-  PureEffect,
   runEffect,
   RunEffect
   } from './effect'
@@ -36,7 +36,7 @@ export const complete = <A> (value: A, f: Fiber<A>): void => {
 }
 
 export const fork = <E, A> (h: Handler<E, A>, e: Effect<E, A>): Fiber<A> => {
-  if (e instanceof PureEffect) return fiberOf(e.value)
+  if (e instanceof NoEffect) return fiberOf(e.value)
 
   const fiber = createFiber<A>(() => cancel())
   const cancel: Cancel = runEffect(a => complete(a, fiber), h, e)
