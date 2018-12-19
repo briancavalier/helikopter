@@ -40,12 +40,12 @@ run({
   view: counterView,
   state: { count: 0, delayed: 0 },
   effects: []
-}, (e, k) => {
-  switch(e.type) {
+}, (effect, k) => {
+  switch(effect.type) {
     case 'delay':
-      const t = setTimeout(k, e.ms)
+      const t = setTimeout(k, effect.ms)
       return () => clearTimeout(t)
     case 'render':
-      return handleRender(e.view, document.body, k)
+      return handleRender(effect.view, document.body, k)
   }
 })

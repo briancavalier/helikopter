@@ -1,7 +1,6 @@
 import {
   Cancel,
   Effect,
-  effect,
   Handler,
   mapTo,
   NoEffect,
@@ -9,6 +8,8 @@ import {
   runEffect,
   RunEffect
   } from './effect'
+
+const noop = () => {}
 
 export type Unhandle = () => void
 
@@ -30,7 +31,7 @@ export const fiberOf = <A> (value: A): Fiber<A> =>
 export const complete = <A> (value: A, f: Fiber<A>): void => {
   if (f.state.status !== 0) return
 
-  const handlers = f.state.handlers
+  const { handlers } = f.state
   f.state = { status: 1, value }
   handlers.forEach(h => h(f))
 }
@@ -47,13 +48,13 @@ export const kill = <A> (f: Fiber<A>): Effect<never, void> => {
   if (f.state.status !== 0) return pure(undefined)
   else return new RunEffect<never, void>((_, g) => {
     if (f.state.status === 0) {
-      const cancel = f.state.cancel
+      const { cancel } = f.state
       f.state = { status: -1 }
       cancel()
     }
 
     g(undefined)
-    return () => {}
+    return noop
   })
 }
 
@@ -64,7 +65,7 @@ export const select = <A> (h: (fs: ReadonlyArray<Fiber<A>>) => void, fs: Readonl
   const ready = fs.some(f => f.state.status !== 0)
   if (ready) {
     h(fs)
-    return () => {}
+    return noop
   }
 
   const wrapped = (_: Fiber<A>) => {
@@ -83,7 +84,7 @@ const join = <A> (h: (f: Fiber<A>) => void, f: Fiber<A>): Unhandle => {
   else if(f.state.status === 0) return addToHandlers(h, f.state.handlers)
 
   h(f)
-  return () => {}
+  return noop
 }
 
 const addToHandlers = <A> (h: (a: A) => void, handlers: ((a: A) => void)[]): Unhandle => {
