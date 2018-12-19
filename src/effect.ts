@@ -15,8 +15,8 @@ export class AnEffect<E, A> extends Effect<E, A> {
   constructor (public readonly op: E) { super() }
 }
 
-export class RunEffect<E, A> extends Effect<E, A> {
-  constructor (public readonly runEffect: (h: Handler<E, A>, k: (a: A) => void) => Cancel) { super() }
+export class RunEffect<E, A, B> extends Effect<E, B> {
+  constructor (public readonly runEffect: (h: Handler<E, A>, k: (b: B) => void) => Cancel) { super() }
 }
 
 export const effect = <E, A> (op: E): Effect<E, A> =>
@@ -36,7 +36,7 @@ export const runEffect = <E, A> (f: (a: A) => void, h: Handler<E, A>, eff: Effec
 }
 
 export const mapTo = <E, A, B> (b: B, e: Effect<E, A>): Effect<E, B> =>
-  new RunEffect((h: Handler<E, B>, k) =>
+  new RunEffect<E, A, B>((h: Handler<E, A>, k: (b: B) => void) =>
     runEffect(_ => k(b), h, e))
 
 export type Delay = Fx<'delay', { ms: number }>

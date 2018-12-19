@@ -46,7 +46,7 @@ export const fork = <E, A> (h: Handler<E, A>, e: Effect<E, A>): Fiber<A> => {
 
 export const kill = <A> (f: Fiber<A>): Effect<never, void> => {
   if (f.state.status !== 0) return pure(undefined)
-  else return new RunEffect<never, void>((_, g) => {
+  else return new RunEffect<never, void, void>((_, g) => {
     if (f.state.status === 0) {
       const { cancel } = f.state
       f.state = { status: -1 }
