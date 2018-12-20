@@ -1,33 +1,33 @@
-import { Effect, Handler } from './effect'
 import { Fiber, fork, kill, select } from './fiber'
+import { Fx } from './fx'
 import { Render, render } from './render'
 
-export type Update<E, S, A> = [S, ReadonlyArray<Effect<E, A>>]
-export type UpdateState<E, S, A> = (s: S, a: A, i: ReadonlyArray<Fiber<A>>) => Update<E, S, A>
+export type Update<H, S, A> = [S, ReadonlyArray<Fx<H, A>>]
+export type UpdateState<H, S, A> = (s: S, a: A, i: ReadonlyArray<Fiber<A>>) => Update<H, S, A>
 export type View<S, V> = (s: S) => V
 
-export type App<E, S, V, A> = {
-  update: UpdateState<E, S, A>,
+export type App<H, S, V, A> = {
+  update: UpdateState<H, S, A>,
   view: View<S, V>
   state: S,
-  effects: ReadonlyArray<Effect<E, A>>
+  effects: ReadonlyArray<Fx<H, A>>
 }
 
-export const run = <E, S, V, A> ({ update, view, state, effects }: App<E, S, V, A>, h: Handler<E | Render<V>, A>): void =>
+export const run = <H, S, V, A> ({ update, view, state, effects }: App<H, S, V, A>, h: H & Render<V, A>): void =>
   step(update, view, state, effects, h, [])
 
-const step = <E, S, V, A> (update: UpdateState<E, S, A>, view: View<S, V>, state: S, effects: ReadonlyArray<Effect<E, A>>, h: Handler<E | Render<V>, A>, inflight: ReadonlyArray<Fiber<A>>): void => {
-  const rendering = fork(h, render(view(state)))
-  const started = effects.map(e => fork(h, e))
+const step = <H, S, V, A> (update: UpdateState<H, S, A>, view: View<S, V>, state: S, effects: ReadonlyArray<Fx<H, A>>, h: H & Render<V, A>, inflight: ReadonlyArray<Fiber<A>>): void => {
+  const rendering = fork(render<V, A>(view(state)), h)
+  const started = effects.map(fx => fork(fx, h))
   select(fs => {
-    fork(h, kill(rendering))
+    fork(kill(rendering), h)
     handleStep(update, view, state, h, fs)
   }, [...inflight, ...started, rendering])
 }
 
-const handleStep = <E, S, V, A> (update: UpdateState<E, S, A>, view: View<S, V>, state: S, h: Handler<E | Render<V>, A>, fs: ReadonlyArray<Fiber<A>>): void => {
+const handleStep = <H, S, V, A> (update: UpdateState <H, S, A>, view: View <S, V>, state: S, h: H & Render<V, A>, fs: ReadonlyArray<Fiber<A>>): void => {
   const [actions, pendingFibers] = partition(fs)
-  const effects = [] as Effect<E, A>[]
+  const effects = [] as Fx<H, A>[]
   for (const a of actions) {
     const [s, e] = update(state, a, pendingFibers)
     state = s

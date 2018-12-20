@@ -1,4 +1,4 @@
-import { Cancel } from './effect'
+import { Cancel } from '../experiments/effect'
 import { directive, EventPart, Part, render as lrender, TemplateResult } from 'lit-html'
 
 export const handleRender = <A>(t: TemplateResult, at: Element, k: (a: A) => void): Cancel => {

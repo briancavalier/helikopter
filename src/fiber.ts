@@ -1,13 +1,4 @@
-import {
-  Cancel,
-  Effect,
-  Handler,
-  mapTo,
-  NoEffect,
-  pure,
-  runEffect,
-  RunEffect
-  } from './effect'
+import { Cancel, Fx, mapTo, runFx } from './fx'
 
 const noop = () => {}
 
@@ -36,29 +27,25 @@ export const complete = <A> (value: A, f: Fiber<A>): void => {
   handlers.forEach(h => h(f))
 }
 
-export const fork = <E, A> (h: Handler<E, A>, e: Effect<E, A>): Fiber<A> => {
-  if (e instanceof NoEffect) return fiberOf(e.value)
-
+export const fork = <H, A> (fx: Fx<H, A>, h: H): Fiber<A> => {
   const fiber = createFiber<A>(() => cancel())
-  const cancel: Cancel = runEffect(a => complete(a, fiber), h, e)
+  const cancel: Cancel = runFx(fx, h, a => complete(a, fiber))
   return fiber
 }
 
-export const kill = <A> (f: Fiber<A>): Effect<never, void> => {
-  if (f.state.status !== 0) return pure(undefined)
-  else return new RunEffect<never, void, void>((_, g) => {
+export const kill = <A> (f: Fiber<A>): Fx<unknown, void> =>
+  (_, k) => {
     if (f.state.status === 0) {
       const { cancel } = f.state
       f.state = { status: -1 }
       cancel()
     }
 
-    g(undefined)
+    k(undefined)
     return noop
-  })
-}
+  }
 
-export const killWith = <A> (a: A, f: Fiber<A>): Effect<never, A> =>
+export const killWith = <A> (a: A, f: Fiber<A>): Fx<unknown, A> =>
   mapTo(a, kill(f))
 
 export const select = <A> (h: (fs: ReadonlyArray<Fiber<A>>) => void, fs: ReadonlyArray<Fiber<A>>): Unhandle => {

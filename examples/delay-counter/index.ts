@@ -1,8 +1,8 @@
 import { run, Update } from '../../src/app'
-import { delay, Delay, mapTo } from '../../src/effect'
 import { Fiber, killWith } from '../../src/fiber'
+import { Cancel, delay, Delay, mapTo } from '../../src/fx'
 import { handleRender } from '../../src/lit-handler'
-import { html } from 'lit-html'
+import { html, TemplateResult } from 'lit-html'
 
 type CounterAction = '+' | '-' | '0' | '+ delay' | '0 delay' | 'none'
 
@@ -11,7 +11,7 @@ type CounterState = {
   delayed: number
 }
 
-const counterView = ({ count, delayed }: CounterState) => html`
+const counterView = ({ count, delayed }: CounterState): TemplateResult => html`
   <p>${count} (delayed: ${delayed})</p>
   <p>
     <button @click=${'+'}>+</button>
@@ -40,12 +40,12 @@ run({
   view: counterView,
   state: { count: 0, delayed: 0 },
   effects: []
-}, (effect, k) => {
-  switch(effect.type) {
-    case 'delay':
-      const t = setTimeout(k, effect.ms)
-      return () => clearTimeout(t)
-    case 'render':
-      return handleRender(effect.view, document.body, k)
+}, {
+  delay: (ms: number, k: (r: void) => void): Cancel => {
+    const t = setTimeout(k, ms, ms)
+    return () => clearTimeout(t)
+  },
+  render: (t: TemplateResult, k: (a: CounterAction) => void): Cancel => {
+    return handleRender(t, document.body, k)
   }
 })

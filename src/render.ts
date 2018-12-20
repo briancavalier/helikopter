@@ -1,6 +1,8 @@
-import { Effect, effect, Fx } from './effect'
+import { Cancel, Fx } from './fx'
 
-export type Render<V> = Fx<'render', { view: V }>
+export type Render<V, A> = {
+  render: (v: V, k: (a: A) => void) => Cancel
+}
 
-export const render = <V, A> (view: V) : Effect<Render<V>, A> =>
-  effect<Render<V>, A>({ type: 'render', view })
+export const render = <V, A> (view: V) : Fx<Render<V, A>, A> =>
+  ({ render }, k) => render(view, k)
