@@ -42,7 +42,7 @@ run({
   effects: []
 }, {
   delay: (ms: number, k: (r: void) => void): Cancel => {
-    const t = setTimeout(k, ms, ms)
+    const t = setTimeout(k, ms)
     return () => clearTimeout(t)
   },
   render: (t: TemplateResult, k: (a: CounterAction) => void): Cancel => {
