@@ -1,43 +1,54 @@
-import { run, Update } from '../../src/app'
-import { delay, mapTo } from '../../src/effect'
-import { Fiber, killWith } from '../../src/fiber'
-import { render } from '../../src/lit'
-import { html } from 'lit-html'
+import { Cancel, Fiber, Fibers, Fx, handleFibers, killWith, mapTo, run, Update } from '../../src'
+import { renderLitHtml } from '../../src/lit-handler'
+import { html, TemplateResult } from 'lit-html'
 
-type CounterAction = 'inc' | 'dec' | 'reset count' | 'delay' | 'cancel delays' | 'none'
+type CounterAction = '+' | '-' | '0' | '+ delay' | '0 delay' | 'none'
 
 type CounterState = {
   count: number,
   delayed: number
 }
 
-const counterView = ({ count, delayed }: CounterState) => html`
+const counterView = ({ count, delayed }: CounterState): TemplateResult => html`
   <p>${count} (delayed: ${delayed})</p>
   <p>
-    <button @click=${'inc'}>+</button>
-    <button @click=${'dec'}>-</button>
-    <button @click=${'reset count'} ?disabled=${count === 0}>Reset Count</button>
-    <button @click=${'delay'}>Delay +</button>
-    <button @click=${'cancel delays'} ?disabled=${delayed === 0}>Cancel Delays</button>
+    <button @click=${'+'}>+</button>
+    <button @click=${'-'}>-</button>
+    <button @click=${'0'} ?disabled=${count === 0}>Reset Count</button>
+    <button @click=${'+ delay'}>Delay +</button>
+    <button @click=${'0 delay'} ?disabled=${delayed === 0}>Cancel Delays</button>
   </p>
 `
 
-const counter = (s: CounterState, a: CounterAction, fs: ReadonlyArray<Fiber<CounterAction>>): Update<CounterState, CounterAction> => {
+const counter = (s: CounterState, a: CounterAction, fs: ReadonlyArray<Fiber<CounterAction>>): Update<Delay & Fibers, CounterState, CounterAction> => {
   switch (a) {
-    case 'inc': return [{ count: s.count + 1, delayed: fs.length }, []]
-    case 'dec': return [{ count: s.count - 1, delayed: fs.length }, []]
-    case 'reset count': return [{ count: 0, delayed: fs.length }, []]
-    case 'delay':
-      const d = mapTo('inc' as CounterAction, delay(1000))
+    case '+': return [{ count: s.count + 1, delayed: fs.length }, []]
+    case '-': return [{ count: s.count - 1, delayed: fs.length }, []]
+    case '0': return [{ count: 0, delayed: fs.length }, []]
+    case '+ delay':
+      const d = mapTo('+' as CounterAction, delay(1000))
       return [{ ...s, delayed: fs.length + 1 }, [d]]
-    case 'cancel delays': return [{ ...s, delayed: 0 }, fs.map(f => killWith('none', f))]
-    default: return [s, []]
+    case '0 delay': return [{ ...s, delayed: 0 }, fs.map(f => killWith('none', f))]
+    case 'none': return [s, []]
   }
 }
 
+type Delay = {
+  delay: (ms: number, k: (r: void) => void) => Cancel
+}
+
+const delay = (ms: number): Fx<Delay, void> =>
+  ({ delay }, k) => delay(ms, k)
+
 run({
-  updateState: counter,
-  updateView: s => render(counterView(s), document.body),
-  state: { count: 0, delayed: 0 },
-  effects: []
+  update: counter,
+  view: counterView,
+  state: { count: 0, delayed: 0 }
+}, {
+  ...handleFibers,
+  ...renderLitHtml<CounterAction>(document.body),
+  delay: (ms: number, k: (r: void) => void): Cancel => {
+    const t = setTimeout(k, ms)
+    return () => clearTimeout(t)
+  }
 })
