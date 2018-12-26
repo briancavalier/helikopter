@@ -3,18 +3,19 @@ import { Fx } from './fx'
 import { Render, render } from './render'
 
 export type Update<H, S, A> = [S, ReadonlyArray<Fx<H, A>>]
-export type UpdateState<H, S, A> = (s: S, a: A, i: ReadonlyArray<Fiber<A>>) => Update<H, S, A>
+export type UpdateState<H, S, A> = (s: S, a: A, fa: ReadonlyArray<Fiber<A>>) => Update<H, S, A>
 export type View<S, V> = (s: S) => V
 
 export type App<H, S, V, A> = {
   update: UpdateState<H, S, A>,
   view: View<S, V>
-  state: S,
-  effects?: ReadonlyArray<Fx<H, A>>
 }
 
-export const run = <H, S, V, A> ({ update, view, state, effects = [] }: App<H, S, V, A>, h: H & Fibers & Render<V, A>): void =>
-  step(update, view, state, effects, h, [])
+export const run = <H, S, V, A>({ update, view }: App<H, S, V, A>, state: S, effects: ReadonlyArray<Fx<H, A>> = []): Fx<H & Fibers & Render<V, A>, never> =>
+  env => {
+    step(update, view, state, effects, env, [])
+    return () => {}
+  }
 
 const step = <H, S, V, A>(update: UpdateState<H, S, A>, view: View<S, V>, state: S, effects: ReadonlyArray<Fx<H, A>>, h: H & Fibers & Render<V, A>, inflight: ReadonlyArray<Fiber<A>>): void => {
   const rendering = fork(render<V, A>(view(state)), h)

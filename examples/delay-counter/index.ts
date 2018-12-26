@@ -1,13 +1,10 @@
-import { Cancel, Fiber, Fibers, Fx, handleFibers, killWith, mapTo, run, Update } from '../../src'
+import { Cancel, Fiber, Fibers, fibers, Fx, killWith, mapTo, run, runFx, Update } from '../../src'
 import { renderLitHtml } from '../../src/lit-handler'
 import { html, TemplateResult } from 'lit-html'
 
 type CounterAction = '+' | '-' | '0' | '+ delay' | '0 delay' | 'none'
 
-type CounterState = {
-  count: number,
-  delayed: number
-}
+type CounterState = { count: number, delayed: number }
 
 const counterView = ({ count, delayed }: CounterState): TemplateResult => html`
   <p>${count} (delayed: ${delayed})</p>
@@ -40,12 +37,10 @@ type Delay = {
 const delay = (ms: number): Fx<Delay, void> =>
   ({ delay }, k) => delay(ms, k)
 
-run({
-  update: counter,
-  view: counterView,
-  state: { count: 0, delayed: 0 }
-}, {
-  ...handleFibers,
+const app = run({ update: counter, view: counterView }, { count: 0, delayed: 0 })
+
+runFx(app, {
+  ...fibers,
   ...renderLitHtml<CounterAction>(document.body),
   delay: (ms: number, k: (r: void) => void): Cancel => {
     const t = setTimeout(k, ms)

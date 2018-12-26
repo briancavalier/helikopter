@@ -26,9 +26,9 @@ export const complete = <A> (value: A, f: Fiber<A>): void => {
   handlers.forEach(h => h(f))
 }
 
-export type Fibers = typeof handleFibers
+export type Fibers = typeof fibers
 
-export const handleFibers = {
+export const fibers = {
   kill <A> (f: Fiber<A>, k: (r: void) => void): Cancel {
     if (f.state.status === 0) {
       const { cancel } = f.state
@@ -54,7 +54,7 @@ export const killWith = <A> (a: A, f: Fiber<A>): Fx<Fibers, A> =>
   mapTo(a, kill(f))
 
 export const select = <A> (h: Handler<ReadonlyArray<Fiber<A>>>, fs: ReadonlyArray<Fiber<A>>): Unhandle => {
-  const ready = fs.some(f => f.state.status !== 0)
+  const ready = fs.some(f => f.state.status === 1)
   if (ready) {
     h(fs)
     return uncancelable
