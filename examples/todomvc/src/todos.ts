@@ -25,11 +25,8 @@ export type TodoAction =
 	| { action: 'removeCompleted' }
 	| { action: 'setFilter', filter: Filter }
 
-export const withStorage = <H> (update: UpdateState<H, TodoState, TodoAction>): UpdateState<H & Storage, TodoState, TodoAction> =>
-	(s0, a, fs) => {
-		const [s1, fx] = update(s0, a, fs)
-		return [s1, s0.todos === s1.todos ? fx : [...fx, mapTo({ action: 'none' } as TodoAction, save(s1.todos))]]
-	}
+export const storeTodos = (s0: TodoState, s1: TodoState): ReadonlyArray<Fx<Storage, TodoAction>> =>
+	s0.todos === s1.todos ? [] : [mapTo({ action: 'none' } as TodoAction, save(s1.todos))]
 
 export const updateTodos = (s: TodoState, a: TodoAction): Update<Routing, TodoState, TodoAction> => {
 	switch (a.action) {
@@ -46,9 +43,6 @@ export const updateTodos = (s: TodoState, a: TodoAction): Update<Routing, TodoSt
 		case 'setFilter': return [{ ...s, filter: a.filter }, [map(filter => ({ action: 'setFilter', filter }) as TodoAction, route())]]
 	}
 }
-
-export const emptyApp: TodoState =
-	{ todos: [], editing: null, filter: '/' }
 
 export const countRemaining = (todos: Todos): number =>
 	todos.reduce((count, { completed }) => count + (completed ? 0 : 1), 0)
@@ -81,6 +75,12 @@ export type Storage = {
 	load: (k: (todos: Todos) => void) => Cancel,
 	save: (todos: Todos, k: (r: void) => void) => Cancel
 }
+
+export const withEffect = <H, E, S, A>(f: (s0: S, s1: S) => ReadonlyArray<Fx<E, A>>, update: UpdateState<H, S, A>): UpdateState<H & E, S, A> =>
+	(s0, a, fs) => {
+		const [s1, fx] = update(s0, a, fs)
+		return [s1, [...fx, ...f(s0, s1)]]
+	}
 
 export const load = (): Fx<Storage, Todos> =>
 	({ load }, k) => load(k)

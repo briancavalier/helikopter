@@ -1,4 +1,4 @@
-import { emptyApp, load, route, Routing, Storage, TodoAction, Todos, updateTodos, withStorage } from './todos'
+import { load, route, Routing, Storage, storeTodos, TodoAction, Todos, updateTodos, withEffect } from './todos'
 import { view } from './view'
 import { Cancel, fibers, Fx, map, run, runFx } from '../../../src'
 import { renderLitHtml } from '../../../src/lit-handler'
@@ -17,7 +17,7 @@ const storage = (key: string): Storage => ({
 
 const routing: Routing = {
 	route (k: (r: string) => void): Cancel {
-		const handler = (e: any) => {
+		const handler = () => {
 			k(window.location.hash.slice(1))
 		}
 		window.addEventListener('hashchange', handler, { once: true })
@@ -25,9 +25,11 @@ const routing: Routing = {
 	}
 }
 
-const app = run({ update: withStorage(updateTodos), view }, emptyApp, [
+const initialState = { todos: [], editing: null, filter: '/' }
+
+const app = run({ update: withEffect(storeTodos, updateTodos), view }, initialState, [
 	map(filter => ({ action: 'setFilter', filter }) as TodoAction, route()),
-	map(todos => ({ action: 'load', todos }) as TodoAction, load())
+	map(todos => ({ action: 'load', todos }), load())
 ] as ReadonlyArray<Fx<Routing & Storage, TodoAction>>)
 
 runFx(app, {
