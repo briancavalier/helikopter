@@ -3,11 +3,12 @@ export type Cancel = () => void
 export const uncancelable = () => {}
 
 export type Fx<H, A> = (handler: H, k: (a: A) => void) => Cancel
+export type Pure<A> = Fx<unknown, A>
 
 export const runFx = <H, A>(fx: Fx<H, A>, handler: H, k: (a: A) => void = () => {}): Cancel =>
   fx(handler, k)
 
-export const pure = <A> (a: A): Fx<unknown, A> =>
+export const pure = <A> (a: A): Pure<A> =>
   (_, k) => {
     k(a)
     return uncancelable

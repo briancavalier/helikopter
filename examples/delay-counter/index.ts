@@ -1,5 +1,5 @@
 import { Cancel, Fiber, Fibers, fibers, Fx, killWith, mapTo, run, runFx, Update } from '../../src'
-import { renderLitHtml } from '../../src/lit-handler'
+import { renderLitHtml } from '../../src/lit-html-view'
 import { html, TemplateResult } from 'lit-html'
 
 type CounterAction = '+' | '-' | '0' | '+ delay' | '0 delay' | 'none'

@@ -1,7 +1,7 @@
 import { load, route, Routing, Storage, storeTodos, TodoAction, Todos, updateTodos, withEffect } from './todos'
 import { view } from './view'
 import { Cancel, fibers, Fx, map, run, runFx } from '../../../src'
-import { renderLitHtml } from '../../../src/lit-handler'
+import { renderLitHtml } from '../../../src/lit-html-view'
 
 const storage = (key: string): Storage => ({
 	load (k: (todos: Todos) => void): Cancel {
