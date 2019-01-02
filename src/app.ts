@@ -23,7 +23,7 @@ const step = <H, S, V, A>(update: UpdateState<H, S, A>, view: View<S, V>, state:
   select(fs => {
     fork(kill(rendering), h)
     handleStep(update, view, state, h, fs)
-  }, [...inflight, ...started, rendering])
+  }, ...inflight, ...started, rendering)
 }
 
 const handleStep = <H, S, V, A>(update: UpdateState<H, S, A>, view: View<S, V>, state: S, h: H & Fibers & Render<V, A>, fs: ReadonlyArray<Fiber<A>>): void => {

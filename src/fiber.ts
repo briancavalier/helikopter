@@ -53,7 +53,7 @@ export const kill = <A> (f: Fiber<A>): Fx<Fibers, void> =>
 export const killWith = <A> (a: A, f: Fiber<A>): Fx<Fibers, A> =>
   mapTo(a, kill(f))
 
-export const select = <A> (h: Handler<ReadonlyArray<Fiber<A>>>, fs: ReadonlyArray<Fiber<A>>): Unhandle => {
+export const select = <A, Fibers extends Fiber<any>[]> (h: Handler<Fibers>, ...fs: Fibers): Unhandle => {
   const ready = fs.some(f => f.state.status === 1)
   if (ready) {
     h(fs)
