@@ -33,15 +33,12 @@ const step = <H, S, V, A>(app: App<H, S, V, A>, s: Step<H, S, A>, env: H & Fiber
 }
 
 const handleStep = <H, S, V, A>(app: App<H, S, V, A>, state: S, fs: ReadonlyArray<Fiber<A>>): Step<H, S, A> => {
-  return fs.reduce((s, f) => {
-    switch (f.state.status) {
-      case -1:
-        return s
-      case 0:
-        return { ...s, pending: [...s.pending, f] }
-      case 1:
-        const [state, effects] = app.update(s.state, f.state.value, fs)
-        return { ...s, state, effects: [...s.effects, ...effects] }
-    }
-  }, { state, effects: [], pending: [] } as Step<H, S, A>)
+  const next = fs.reduce((s, f) => {
+    if (f.state.status !== 1) return s
+
+    const [state, effects] = app.update(s.state, f.state.value, fs)
+    return { state, effects: [...s.effects, ...effects] }
+  }, { state, effects: [] as ReadonlyArray<Fx<H, A>> })
+
+  return { state: next.state, effects: next.effects, pending: fs.filter(f => f.state.status === 0) }
 }
