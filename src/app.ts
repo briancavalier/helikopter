@@ -11,38 +11,37 @@ export type App<H, S, V, A> = {
   view: View<S, V>
 }
 
+type Step<H, S, A> = {
+  state: S,
+  effects: ReadonlyArray<Fx<H, A>>,
+  pending: ReadonlyArray<Fiber<A>>
+}
+
 export const run = <H, S, V, A>(app: App<H, S, V, A>, state: S, effects: ReadonlyArray<Fx<H, A>> = []): Fx<H & Fibers & Render<V, A>, never> =>
   env => {
-    step(app, state, effects, env, [])
+    step(app, { state, effects, pending: [] }, env)
     return uncancelable
   }
 
-const step = <H, S, V, A>(app: App<H, S, V, A>, state: S, effects: ReadonlyArray<Fx<H, A>>, h: H & Fibers & Render<V, A>, pending: ReadonlyArray<Fiber<A>>): void => {
-  const rendering = fork(render<V, A>(app.view(state)), h)
-  const started = effects.map(fx => fork(fx, h))
+const step = <H, S, V, A>(app: App<H, S, V, A>, s: Step<H, S, A>, env: H & Fibers & Render<V, A>): void => {
+  const rendering = fork(render<V, A>(app.view(s.state)), env)
+  const started = s.effects.map(fx => fork(fx, env))
   select(fs => {
-    runFx(kill(rendering), h)
-    handleStep(app, state, h, fs)
-  }, ...pending, ...started, rendering)
+    runFx(kill(rendering), env)
+    step(app, handleStep(app, s.state, fs), env)
+  }, ...s.pending, ...started, rendering)
 }
 
-const handleStep = <H, S, V, A>(app: App<H, S, V, A>, state: S, h: H & Fibers & Render<V, A>, fs: ReadonlyArray<Fiber<A>>): void => {
-  const [actions, pending] = partition(fs)
-  const effects = [] as Fx<H, A>[]
-  for (const a of actions) {
-    const [s, e] = app.update(state, a, pending)
-    state = s
-    effects.push(...e)
-  }
-  return step(app, state, effects, h, pending)
-}
-
-const partition = <A> (fs: ReadonlyArray<Fiber<A>>): [ReadonlyArray<A>, ReadonlyArray<Fiber<A>>] => {
-  const complete = [] as A[]
-  const pending = [] as Fiber<A>[]
-  for (const f of fs) {
-    if (f.state.status === 0) pending.push(f)
-    else if (f.state.status === 1) complete.push(f.state.value)
-  }
-  return [complete, pending]
+const handleStep = <H, S, V, A>(app: App<H, S, V, A>, state: S, fs: ReadonlyArray<Fiber<A>>): Step<H, S, A> => {
+  return fs.reduce((s, f) => {
+    switch (f.state.status) {
+      case -1:
+        return s
+      case 0:
+        return { ...s, pending: [...s.pending, f] }
+      case 1:
+        const [state, effects] = app.update(s.state, f.state.value, fs)
+        return { ...s, state, effects: [...s.effects, ...effects] }
+    }
+  }, { state, effects: [], pending: [] } as Step<H, S, A>)
 }

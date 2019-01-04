@@ -71,7 +71,7 @@ export const select = <A, Fibers extends Fiber<any>[]> (h: Handler<Fibers>, ...f
   return unhandleAll
 }
 
-const join = <A> (h: Handler<Fiber<A>>, f: Fiber<A>): Unhandle => {
+export const join = <A> (h: Handler<Fiber<A>>, f: Fiber<A>): Unhandle => {
   if(f.state.status === -1) return () => {}
   else if(f.state.status === 0) return addToHandlers(h, f.state.handlers)
 
