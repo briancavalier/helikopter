@@ -4,7 +4,7 @@ import { html } from 'lit-html'
 
 //-------------------------------------------------------
 type Count = { count: number }
-// An interpreter (i.e. implementation) for the counter app
+
 const counter = {
   inc: (c: Count) => ({ state: { count: c.count + 1 } }),
   dec: (c: Count) => ({ state: { count: c.count - 1 } })
