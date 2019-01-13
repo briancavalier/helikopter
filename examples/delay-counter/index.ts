@@ -1,49 +1,70 @@
-import { Cancel, Fiber, Fibers, fibers, Fx, killWith, mapTo, run, runFx, Update } from '../../src'
+import { ActionsOf, Cancel, Fiber, fibers, Fx, kill, Maybe, runApp, runFx } from '../../src'
 import { renderLitHtml } from '../../src/lit-html-view'
-import { html, TemplateResult } from 'lit-html'
+import { html } from 'lit-html'
 
-type CounterAction = '+' | '-' | '0' | '+ delay' | '0 delay' | 'none'
+//-------------------------------------------------------
+type Count = { count: number }
+// An interpreter (i.e. implementation) for the counter app
+const counter = {
+  inc: (c: Count) => ({ state: { count: c.count + 1 } }),
+  dec: (c: Count) => ({ state: { count: c.count - 1 } })
+}
 
-type CounterState = { count: number, delayed: number }
+//-------------------------------------------------------
+const reset = {
+  reset: () => ({ state: { count: 0 } })
+}
 
-const counterView = ({ count, delayed }: CounterState): TemplateResult => html`
-  <p>${count} (delayed: ${delayed})</p>
+//-------------------------------------------------------
+type Delay = {
+  delay: <A> (a: A, ms: number, k: (r: A) => void) => Cancel
+}
+
+const delay = <A>(a: A, ms: number): Fx<Delay, A> =>
+  ({ delay }, k) => delay(a, ms, k)
+
+type DelayedCount = Count & { delayed: number }
+
+const delayCounter = {
+  delay: (ms: number) => (c: DelayedCount) => ({
+    state: { delayed: c.delayed + 1 },
+    effects: [delay(delayCounter.handleDelay, ms)]
+  }),
+  handleDelay: (c: DelayedCount) => ({
+    state: { count: c.count + 1, delayed: c.delayed - 1 }
+  }),
+  cancelDelays: (c: DelayedCount, delays: ReadonlyArray<Fiber<unknown>>) => ({
+    state: { delayed: 0 },
+    effects: delays.map(kill)
+  })
+}
+
+//-------------------------------------------------------
+const app = { ...counter, ...reset, ...delayCounter }
+
+//-------------------------------------------------------
+// A view that uses capabilities of counter, reset, and delayCounter
+const view = ({ inc, dec, reset, delay, cancelDelays }: typeof app, { count, delayed }: DelayedCount) => html`
+  <p>count: ${count} (delayed: ${delayed})</p>
   <p>
-    <button @click=${'+'}>+</button>
-    <button @click=${'-'}>-</button>
-    <button @click=${'0'} ?disabled=${count === 0}>Reset Count</button>
-    <button @click=${'+ delay'}>Delay +</button>
-    <button @click=${'0 delay'} ?disabled=${delayed === 0}>Cancel Delays</button>
+    <button @click=${() => inc}>+</button>
+    <button @click=${() => dec}>-</button>
+    <button @click=${()=> reset} ?disabled=${count === 0}>Reset</button>
+  </p>
+  <p>
+    <button @click=${()=> delay(1000)}>+ Delay</button>
+    <button @click=${() => cancelDelays} ?disabled=${delayed === 0}>Cancel Delays</button>
   </p>
 `
 
-const counter = (s: CounterState, a: CounterAction, fs: ReadonlyArray<Fiber<CounterAction>>): Update<Delay & Fibers, CounterState, CounterAction> => {
-  switch (a) {
-    case '+': return [{ count: s.count + 1, delayed: fs.length }, []]
-    case '-': return [{ count: s.count - 1, delayed: fs.length }, []]
-    case '0': return [{ count: 0, delayed: fs.length }, []]
-    case '+ delay':
-      const d = mapTo('+' as CounterAction, delay(1000))
-      return [{ ...s, delayed: fs.length + 1 }, [d]]
-    case '0 delay': return [{ ...s, delayed: 0 }, fs.map(f => killWith('none', f))]
-    case 'none': return [s, []]
-  }
-}
+//-------------------------------------------------------
+const appFx = runApp(app, view, { count: 0, delayed: 0 })
 
-type Delay = {
-  delay: (ms: number, k: (r: void) => void) => Cancel
-}
-
-const delay = (ms: number): Fx<Delay, void> =>
-  ({ delay }, k) => delay(ms, k)
-
-const app = run({ update: counter, view: counterView }, { count: 0, delayed: 0 })
-
-runFx(app, {
+runFx(appFx, {
   ...fibers,
-  ...renderLitHtml<CounterAction>(document.body),
-  delay: (ms: number, k: (r: void) => void): Cancel => {
-    const t = setTimeout(k, ms)
+  ...renderLitHtml<Maybe<ActionsOf<typeof app>>>(document.body),
+  delay: <A>(a: A, ms: number, k: (r: A) => void): Cancel => {
+    const t = setTimeout(k, ms, a)
     return () => clearTimeout(t)
   }
 })

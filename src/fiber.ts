@@ -26,17 +26,19 @@ export const complete = <A> (value: A, f: Fiber<A>): void => {
   handlers.forEach(h => h(f))
 }
 
-export type Fibers = typeof fibers
-
 export const fibers = {
-  kill <A> (f: Fiber<A>, k: (r: void) => void): void {
-    if (f.state.status !== 0) return k()
-
-    const { cancel } = f.state
-    f.state = { status: -1 }
-    return cancel(k)
+  kill <A> (f: Fiber<A>, k: (r: void) => void): Cancel {
+    if (f.state.status !== 0) k()
+    else {
+      const { cancel } = f.state
+      f.state = { status: -1 }
+      cancel(k)
+    }
+    return uncancelable
   }
 }
+
+export type Fibers = typeof fibers
 
 export const fork = <H, A> (fx: Fx<H, A>, h: H): Fiber<A> => {
   const fiber = createFiber<A>(k => cancel(k))
@@ -44,23 +46,20 @@ export const fork = <H, A> (fx: Fx<H, A>, h: H): Fiber<A> => {
   return fiber
 }
 
-export const kill = <A> (f: Fiber<A>): Fx<Fibers, void> =>
-  ({ kill }, k) => {
-    kill(f, k)
-    return uncancelable
-  }
+export const kill = (f: Fiber<unknown>): Fx<Fibers, void> =>
+  ({ kill }, k) => kill(f, k)
 
-export const killWith = <A> (a: A, f: Fiber<A>): Fx<Fibers, A> =>
+export const killWith = <A> (a: A, f: Fiber<unknown>): Fx<Fibers, A> =>
   mapTo(a, kill(f))
 
-export const select = <A, Fibers extends Fiber<any>[]> (h: Handler<Fibers>, ...fs: Fibers): Unhandle => {
+export const select = <Fibers extends Fiber<any>[]> (h: Handler<Fibers>, ...fs: Fibers): Unhandle => {
   const ready = fs.some(f => f.state.status === 1)
   if (ready) {
     h(fs)
     return () => {}
   }
 
-  const wrapped = (_: Fiber<A>) => {
+  const wrapped: Handler<Fibers[number]> = () => {
     unhandleAll()
     h(fs)
   }

@@ -3,9 +3,11 @@ export type Cancel = (k: (r: void) => void) => void
 export const uncancelable: Cancel = () => {}
 
 export type Fx<H, A> = (handler: H, k: (a: A) => void) => Cancel
-export type Pure<A> = Fx<unknown, A>
+export type Pure<A> = Fx<{}, A>
 
-export const runFx = <H, A>(fx: Fx<H, A>, handler: H, k: (a: A) => void = () => {}): Cancel =>
+export type Env<F> = F extends Fx<infer H, any> ? H : never
+
+export const runFx = <H, Handler extends H, A>(fx: Fx<H, A>, handler: Handler, k: (a: A) => void = () => {}): Cancel =>
   fx(handler, k)
 
 export const pure = <A> (a: A): Pure<A> =>
@@ -19,3 +21,11 @@ export const map = <H, A, B> (f: (a: A) => B, fx: Fx<H, A>): Fx<H, B> =>
 
 export const mapTo = <H, A, B> (b: B, fx: Fx<H, A>): Fx<H, B> =>
   map(_ => b, fx)
+
+export const chain = <HA, HB, A, B>(f: (a: A) => Fx<HA, B>, fx: Fx<HB, A>): Fx<HA & HB, B> =>
+  (env, k) => {
+    let cancel = fx(env, a => {
+      cancel = f(a)(env, k)
+    })
+    return k => cancel(k)
+  }
