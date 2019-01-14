@@ -2,8 +2,6 @@ export type Todo = { description: string, completed: boolean }
 
 export type Todos = ReadonlyArray<Todo>
 
-export type Filter = string
-
 export type TodoState = { todos: Todos }
 
 export const countRemaining = (todos: Todos): number =>
