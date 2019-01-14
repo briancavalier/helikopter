@@ -1,4 +1,4 @@
-import { ActionsOf, Cancel, Fiber, fibers, Fx, kill, Maybe, runApp, runFx } from '../../src'
+import { ActionsOf, Cancel, Fiber, fibers, Fx, kill, Maybe, runApp, runFx, withEffects } from '../../src'
 import { renderLitHtml } from '../../src/lit-html-view'
 import { html } from 'lit-html'
 
@@ -6,13 +6,13 @@ import { html } from 'lit-html'
 type Count = { count: number }
 
 const counter = {
-  inc: (c: Count) => ({ state: { count: c.count + 1 } }),
-  dec: (c: Count) => ({ state: { count: c.count - 1 } })
+  inc: (c: Count) => ({ count: c.count + 1 }),
+  dec: (c: Count) => ({ count: c.count - 1 })
 }
 
 //-------------------------------------------------------
 const reset = {
-  reset: () => ({ state: { count: 0 } })
+  reset: () => ({ count: 0 })
 }
 
 //-------------------------------------------------------
@@ -26,17 +26,12 @@ const delay = <A>(a: A, ms: number): Fx<Delay, A> =>
 type DelayedCount = Count & { delayed: number }
 
 const delayCounter = {
-  delay: (ms: number) => (c: DelayedCount) => ({
-    state: { delayed: c.delayed + 1 },
-    effects: [delay(delayCounter.handleDelay, ms)]
-  }),
-  handleDelay: (c: DelayedCount) => ({
-    state: { count: c.count + 1, delayed: c.delayed - 1 }
-  }),
-  cancelDelays: (c: DelayedCount, delays: ReadonlyArray<Fiber<unknown>>) => ({
-    state: { delayed: 0 },
-    effects: delays.map(kill)
-  })
+  delay: (ms: number) => (c: DelayedCount) =>
+    withEffects({ delayed: c.delayed + 1 }, [delay(delayCounter.handleDelay, ms)]),
+  handleDelay: (c: DelayedCount) =>
+    ({ count: c.count + 1, delayed: c.delayed - 1 }),
+  cancelDelays: (c: DelayedCount, delays: ReadonlyArray<Fiber<unknown>>) =>
+    withEffects({ delayed: 0 }, delays.map(kill))
 }
 
 //-------------------------------------------------------

@@ -5,8 +5,6 @@ export const uncancelable: Cancel = () => {}
 export type Fx<H, A> = (handler: H, k: (a: A) => void) => Cancel
 export type Pure<A> = Fx<{}, A>
 
-export type Env<F> = F extends Fx<infer H, any> ? H : never
-
 export const runFx = <H, Handler extends H, A>(fx: Fx<H, A>, handler: Handler, k: (a: A) => void = () => {}): Cancel =>
   fx(handler, k)
 

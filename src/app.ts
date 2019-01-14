@@ -1,4 +1,4 @@
-import { Fiber, Fibers, fork, select } from './fiber'
+import { Fiber, fork, select } from './fiber'
 import { Fx } from './fx'
 import { Render, render } from './render'
 import { loop, SFx } from './run'
@@ -9,7 +9,14 @@ export type Maybe<A> = A | void
 type U2I<U> =
   (U extends any ? (u: U) => void : never) extends ((i: infer I) => void) ? I : never
 
-export type Update<E, A> = { state: A, effects?: E }
+export class Update<E, A> {
+  constructor (public readonly state: A, public readonly effects: E) {}
+}
+
+export const withEffects = <E, S>(state: S, effects: E): Update<E, S> =>
+  new Update(state, effects)
+
+// export type Update<E, A> = { state: A, effects?: E }
 export type Action<E, P, A, B> = (a: A, p: P) => Update<E, B>
 
 export type Step<H, S, A> = {
@@ -69,8 +76,10 @@ const handleStep = <
 
     // TODO: Allow type-specific merging of prev and new State
     // Currently, this only works if State is an object
-    const update: Update<ReadonlyArray<Fx<Effects, Actions>>, Partial<State>> = (f.state.value as any)(s.state, fs)
-    return { state: { ...s.state, ...update.state }, effects: [...s.effects, ...(update.effects || [])] }
+    const update = (f.state.value as any)(s.state, fs)
+    return update instanceof Update
+      ? { state: { ...s.state, ...update.state }, effects: [...s.effects, ...update.effects] }
+      : { state: { ...s.state, ...update }, effects: s.effects }
   }, { state, effects: [] as ReadonlyArray<Fx<Effects, Actions>> })
 
   return { ...next, pending: fs.filter(f => f.state.status === 0) }
