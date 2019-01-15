@@ -2,9 +2,7 @@ import { Render } from './render'
 import { Cancel } from '../experiments/effect'
 import { directive, EventPart, NodePart, Part, render as lrender, TemplateResult } from 'lit-html'
 
-export type LitHtmlView<A> = TemplateResult & { __actions?: A }
-
-export const renderLitHtml = <A>(root: Element): Render<TemplateResult, A> => {
+export const renderLitHtml = <A> (root: Element): Render<TemplateResult, A> => {
   let animationFrame: number | undefined
   return {
     render: (v: TemplateResult, k: (a: A) => void): Cancel => {

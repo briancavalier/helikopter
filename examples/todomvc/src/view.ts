@@ -1,7 +1,7 @@
 import { TodoEdit } from './todoEdit'
 import { Todo, TodoList } from './todoList'
 import { ActionsOf, Maybe, nothing, StateOf } from '../../../src'
-import { html } from 'lit-html'
+import { html, TemplateResult } from 'lit-html'
 
 const ENTER_KEY = 'Enter'
 const ESC_KEY = 'Escape'
@@ -24,7 +24,7 @@ const handleCompleteEdit = ({ saveEdit }: TodoEdit) => (e: any): ActionsOf<TodoE
 
 const showWhen = (condition: boolean): string => condition ? '' : 'display: none'
 
-export const view = (todoApp: TodoList & TodoEdit, { todos, editing }: StateOf<TodoList & TodoEdit>) => {
+export const view = (todoApp: TodoList & TodoEdit, { todos, editing }: StateOf<TodoList & TodoEdit>): TemplateResult => {
 	const active = todoApp.countActive(todos)
 	const showList = showWhen(todos.length > 0)
 	const showClear = showWhen(todos.length > active)
