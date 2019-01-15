@@ -1,4 +1,4 @@
-import { ActionsOf, Cancel, Fiber, fibers, Fx, kill, Maybe, runApp, runFx, withEffects } from '../../src'
+import { ActionsOf, Cancel, Fiber, fibers, Fx, kill, runApp, runFx, withEffects } from '../../src'
 import { renderLitHtml } from '../../src/lit-html-view'
 import { html } from 'lit-html'
 
@@ -57,7 +57,7 @@ const appFx = runApp(app, view, { count: 0, delayed: 0 })
 
 runFx(appFx, {
   ...fibers,
-  ...renderLitHtml<Maybe<ActionsOf<typeof app>>>(document.body),
+  ...renderLitHtml<ActionsOf<typeof app>>(document.body),
   delay: <A>(a: A, ms: number, k: (r: A) => void): Cancel => {
     const t = setTimeout(k, ms, a)
     return () => clearTimeout(t)

@@ -1,13 +1,13 @@
 import { TodoEdit } from './todoEdit'
 import { Todo, TodoList } from './todoList'
-import { ActionsOf, Maybe, nothing, StateOf } from '../../../src'
+import { ActionsOf, Maybe, StateOf } from '../../../src'
 import { html, TemplateResult } from 'lit-html'
 
 const ENTER_KEY = 'Enter'
 const ESC_KEY = 'Escape'
 
 const handleAddKey = ({ addTodo }: TodoList) => (e: any): Maybe<ActionsOf<TodoList>> => {
-	if (e.key !== ENTER_KEY || e.target.value.trim() === '') return nothing
+	if (e.key !== ENTER_KEY || e.target.value.trim() === '') return null
 
 	const description = e.target.value.trim()
 	e.target.value = ''
@@ -17,7 +17,7 @@ const handleAddKey = ({ addTodo }: TodoList) => (e: any): Maybe<ActionsOf<TodoLi
 const handleEditKey = ({ cancelEdit, saveEdit }: TodoEdit) => (e: any): Maybe<ActionsOf<TodoEdit>> =>
 	e.key === ESC_KEY ? cancelEdit
 		: e.key === ENTER_KEY ? saveEdit(e.target.value.trim())
-		: nothing
+		: null
 
 const handleCompleteEdit = ({ saveEdit }: TodoEdit) => (e: any): ActionsOf<TodoEdit> =>
 	saveEdit(e.target.value.trim())
