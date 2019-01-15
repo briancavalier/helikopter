@@ -1,4 +1,4 @@
-import { countRemaining as countActive, Todo, TodoApp, TodoState } from './todos'
+import { Todo, TodoApp, TodoState } from './todos'
 import { Maybe } from '../../../src'
 import { html } from 'lit-html'
 
@@ -18,7 +18,7 @@ const mapMaybe = <A, B> (f: (a: A) => B, ma: Maybe<A>): Maybe<B> =>
 	ma == undefined ? undefined : f(ma)
 
 export const view = (todoApp: TodoApp, { todos }: TodoState) => {
-	const active = countActive(todos)
+	const active = todoApp.countActive(todos)
 
 	return html`
 	<section class="todoapp">

@@ -16,8 +16,7 @@ export class Update<E, A> {
 export const withEffects = <E, S>(state: S, effects: E): Update<E, S> =>
   new Update(state, effects)
 
-// export type Update<E, A> = { state: A, effects?: E }
-export type Action<E, P, A, B> = (a: A, p: P) => Update<E, B>
+export type Action<E, P, A> = (a: A, p: P) => (Partial<A> | Update<E, Partial<A>>)
 
 export type Step<H, S, A> = {
   state: S,
@@ -25,15 +24,15 @@ export type Step<H, S, A> = {
   pending: ReadonlyArray<Fiber<A>>
 }
 
-export type ActionOf<F> = F extends Action<any, any, any, any> ? F
-  : Ret<F> extends Action<any, any, any, any> ? Ret<F>
+export type ActionOf<F> = Ret<F> extends Action<any, any, any> ? Ret<F>
+  : F extends Action<any, any, any> ? F
   : never
-export type ActionsOf<I> = Maybe<ActionOf<I[keyof I]>>
+export type ActionsOf<I> = Maybe<{ [K in keyof I]: ActionOf<I[K]> }[keyof I]>
 
 export type Arg<F> = F extends (a: infer A, ...rest: any[]) => any ? A : never
 export type Ret<F> = F extends (...args: any[]) => infer A ? A : never
 
-export type Fst<P> = P extends Update<any, infer A> ? A : never
+export type Fst<P> = P extends Update<any, infer A> ? A : P
 export type Snd<P> = P extends Update<infer A, any> ? A : never
 export type Env<F> = F extends Fx<infer H, any> ? H : never
 export type EnvA<FA> = FA extends ReadonlyArray<infer F> ? Env<F> : never
@@ -76,7 +75,7 @@ const handleStep = <
 
     // TODO: Allow type-specific merging of prev and new State
     // Currently, this only works if State is an object
-    const update = (f.state.value as any)(s.state, fs)
+    const update: Partial<State> | Update<ReadonlyArray<Fx<Effects, Actions>>, Partial<State>> = (f.state.value as any)(s.state, fs)
     return update instanceof Update
       ? { state: { ...s.state, ...update.state }, effects: [...s.effects, ...update.effects] }
       : { state: { ...s.state, ...update }, effects: s.effects }

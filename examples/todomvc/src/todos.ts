@@ -4,7 +4,7 @@ export type Todos = ReadonlyArray<Todo>
 
 export type TodoState = { todos: Todos }
 
-export const countRemaining = (todos: Todos): number =>
+export const countActive = (todos: Todos): number =>
 	todos.reduce((count, { completed }) => count + (completed ? 0 : 1), 0)
 
 export const addTodo = (description: string) => (s: TodoState): TodoState =>
@@ -23,7 +23,7 @@ export const updateAllCompleted = (completed: boolean) => (s: TodoState): TodoSt
 	({ todos: s.todos.map(todo => ({ ...todo, completed })) })
 
 export const todoList = {
-	addTodo, removeTodo, updateCompleted, removeAllCompleted, updateAllCompleted
+	addTodo, removeTodo, updateCompleted, removeAllCompleted, updateAllCompleted, countActive
 }
 
 export type TodoApp = typeof todoList
