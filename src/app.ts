@@ -4,6 +4,7 @@ import { Render, render } from './render'
 import { loop, SFx } from './run'
 
 export type Maybe<A> = A | void
+export const nothing = undefined
 
 // Convert Union to Intersection
 type U2I<U> =
