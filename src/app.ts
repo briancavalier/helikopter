@@ -25,9 +25,13 @@ export type Step<H, S, A> = {
   pending: ReadonlyArray<Fiber<A>>
 }
 
-export type ActionOf<F> = Ret<F> extends Action<any, any, any> ? Ret<F>
-  : F extends Action<any, any, any> ? F
+// TODO: Find a way to simplify or eliminate the need for this
+// Trying to derive a set of sections from arbitrary objects
+// won' scale.  Need to rethink
+export type ActionOf<F> = Ret<F> extends Action<any, any, infer A> ? NotArray<A, Ret<F>>
+  : F extends Action<any, any, infer A> ? NotArray<A, F>
   : never
+export type NotArray<A, F> = A extends any[] ? never : F
 export type ActionsOf<I> = Maybe<{ [K in keyof I]: ActionOf<I[K]> }[keyof I]>
 
 export type Arg<F> = F extends (a: infer A, ...rest: any[]) => any ? A : never
@@ -47,11 +51,9 @@ export type EffectsOf<A> = U2I<EnvA<Snd<Ret<ActionsOf<A>>>>>
 export const runApp = <
   App,
   View,
-  State extends StateOf<App>,
-  Actions extends ActionsOf<App>,
-  Effects extends EffectsOf<App> & Render<View, Actions>
->(a: App, v: (a: App, s: State) => View, state: State, effects: Fx<Effects, Actions>[] = []): Fx<Effects, Step<Effects, State, Actions>> =>
-  loop(step<App, View, State, Actions, Effects>(a, v), { state, effects, pending: [] })
+  Effects extends EffectsOf<App> & Render<View, ActionsOf<App>>
+>(a: App, v: (a: App, s: StateOf<App>) => View, state: StateOf<App>, effects: Fx<Effects, ActionsOf<App>>[] = []): Fx<Effects, Step<Effects, StateOf<App>, ActionsOf<App>>> =>
+  loop(step<App, View, StateOf<App>, ActionsOf<App>, Effects>(a, v), { state, effects, pending: [] })
 
 const step = <
   App,

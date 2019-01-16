@@ -1,4 +1,5 @@
 import { TodoEdit } from './todoEdit'
+import { filterTodos, TodoFilter } from './todoFilter'
 import { Todo, TodoList } from './todoList'
 import { ActionsOf, Maybe, StateOf } from '../../../src'
 import { html, TemplateResult } from 'lit-html'
@@ -22,12 +23,12 @@ const handleEditKey = ({ cancelEdit, saveEdit }: TodoEdit) => (e: any): Maybe<Ac
 const handleCompleteEdit = ({ saveEdit }: TodoEdit) => (e: any): ActionsOf<TodoEdit> =>
 	saveEdit(e.target.value.trim())
 
-const showWhen = (condition: boolean): string => condition ? '' : 'display: none'
+const showIf = (condition: boolean): string => condition ? '' : 'display: none'
 
-export const view = (todoApp: TodoList & TodoEdit, { todos, editing }: StateOf<TodoList & TodoEdit>): TemplateResult => {
+export const view = (todoApp: TodoList & TodoEdit, { todos, editing, filter }: StateOf<TodoList & TodoEdit & TodoFilter>): TemplateResult => {
 	const active = todoApp.countActive(todos)
-	const showList = showWhen(todos.length > 0)
-	const showClear = showWhen(todos.length > active)
+	const showList = showIf(todos.length > 0)
+	const showClear = showIf(todos.length > active)
 
 	return html`
 	<section class="todoapp">
@@ -40,7 +41,7 @@ export const view = (todoApp: TodoList & TodoEdit, { todos, editing }: StateOf<T
 			<input id="toggle-all" class="toggle-all" type="checkbox" .checked=${active === 0} @change=${(e: any) => todoApp.updateAllCompleted(e.target.checked)}>
 			<label for="toggle-all">Mark all as complete</label>
 			<ul class="todo-list">
-				${todos.map((todo: Todo) => html`
+				${filterTodos(filter, todos).map((todo: Todo) => html`
 				<li class="${todo.completed ? 'completed' : ''} ${editing === todo ? 'editing' : ''}">
 					<div class="view">
 						<input class="toggle" type="checkbox" .checked=${todo.completed} @change=${(e: any) => todoApp.updateCompleted(e.target.checked, todo)}>
@@ -54,6 +55,11 @@ export const view = (todoApp: TodoList & TodoEdit, { todos, editing }: StateOf<T
 		</section>
 		<footer class="footer" .style="${showList}">
 			<span class="todo-count"><strong>${active}</strong> ${active === 1 ? 'item' : 'items'} left</span>
+			<ul class="filters">
+				<li><a class="${filter === null ? 'selected' : ''}" href="#/">All</a></li>
+				<li><a class="${filter === '/active' ? 'selected' : ''}" href="#/active">Active</a></li>
+				<li><a class="${filter === '/completed' ? 'selected' : ''}" href="#/completed">Completed</a></li>
+			</ul>
 			<!-- Hidden if no completed items are left ↓ -->
 			<button class="clear-completed" .style="${showClear}" @click=${() => todoApp.removeAllCompleted}>Clear completed</button>
 		</footer>
