@@ -25,8 +25,9 @@ const handleCompleteEdit = ({ saveEdit }: TodoEdit) => (e: any): ActionsOf<TodoE
 
 const showIf = (condition: boolean): string => condition ? '' : 'display: none'
 
-export const view = (todoApp: TodoList & TodoEdit, { todos, editing, filter }: StateOf<TodoList & TodoEdit & TodoFilter>): TemplateResult => {
-	const active = todoApp.countActive(todos)
+export const view = (todoApp: TodoList & TodoEdit, state: StateOf<TodoList & TodoEdit & TodoFilter>): TemplateResult => {
+	const { todos, editing, filter } = state
+	const active = todoApp.countActive(state)
 	const showList = showIf(todos.length > 0)
 	const showClear = showIf(todos.length > active)
 

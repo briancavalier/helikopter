@@ -1,4 +1,4 @@
-import { Todos } from './todoList'
+import { Todo } from './todoList'
 import { Cancel, Fx, map, Maybe, withEffects } from '../../../src'
 
 export type Route = {
@@ -18,7 +18,7 @@ export const updateFilter = (filter: string) => () =>
 export const parseFilter = (s: string): Maybe<Filter> =>
 	s === '/active' || s === '/completed' ? s : null
 
-export const filterTodos = (filter: Maybe<Filter>, todos: Todos): Todos =>
+export const filterTodos = (filter: Maybe<Filter>, todos: ReadonlyArray<Todo>): ReadonlyArray<Todo> =>
 	filter === '/completed' ? todos.filter(t => t.completed)
 		: filter === '/active' ? todos.filter(t => !t.completed)
 			: todos

@@ -17,7 +17,11 @@ export class Update<E, A> {
 export const withEffects = <E, S>(state: S, effects: E): Update<E, S> =>
   new Update(state, effects)
 
-export type Action<E, P, A> = (a: A, p: P) => (Partial<A> | Update<E, Partial<A>>)
+export type Action<E, A> = (a: A, p: Partial<Fibers<E>>) => (Partial<A> | Update<E, Partial<A>>)
+export type PureAction<A> = (a: A) => Partial<A>
+type Fibers<F> = {
+  [K in keyof F]: F[K] extends Fx<any, infer A> ? Fiber<A> : never
+}
 
 export type Step<H, S, A> = {
   state: S,
@@ -28,8 +32,8 @@ export type Step<H, S, A> = {
 // TODO: Find a way to simplify or eliminate the need for this
 // Trying to derive a set of sections from arbitrary objects
 // won' scale.  Need to rethink
-export type ActionOf<F> = Ret<F> extends Action<any, any, infer A> ? NotArray<A, Ret<F>>
-  : F extends Action<any, any, infer A> ? NotArray<A, F>
+export type ActionOf<F> = Ret<F> extends Action<any, any> ? Ret<F>
+  : F extends Action<any, any> ? F
   : never
 export type NotArray<A, F> = A extends any[] ? never : F
 export type ActionsOf<I> = Maybe<{ [K in keyof I]: ActionOf<I[K]> }[keyof I]>
@@ -48,20 +52,21 @@ export type OutputOf<A> = U2I<Fst<Ret<ActionsOf<A>>>>
 export type StateOf<A> = InputOf<A> & OutputOf<A>
 export type EffectsOf<A> = U2I<EnvA<Snd<Ret<ActionsOf<A>>>>>
 
-export const runApp = <
-  App,
-  View,
-  Effects extends EffectsOf<App> & Render<View, ActionsOf<App>>
->(a: App, v: (a: App, s: StateOf<App>) => View, state: StateOf<App>, effects: Fx<Effects, ActionsOf<App>>[] = []): Fx<Effects, Step<Effects, StateOf<App>, ActionsOf<App>>> =>
-  loop(step<App, View, StateOf<App>, ActionsOf<App>, Effects>(a, v), { state, effects, pending: [] })
+export const runApp = <App, View>(
+  a: App,
+  v: (a: App, s: StateOf<App>) => View,
+  state: StateOf<App>,
+  effects: Fx<EffectsOf<App>, ActionsOf<App>>[] = []
+): Fx<EffectsOf<App> & Render<View, ActionsOf<App>>, Step<EffectsOf<App>, StateOf<App>, ActionsOf<App>>> =>
+  loop(step<App, View, StateOf<App>, ActionsOf<App>, EffectsOf<App>>(a, v), { state, effects, pending: [] })
 
 const step = <
   App,
   View,
   State,
   Actions,
-  Effects extends EffectsOf<App> & Render<View, Actions>
->(a: App, v: (a: App, s: State) => View): SFx<Effects, Step<Effects, State, Actions>, Step<Effects, State, Actions>> =>
+  Effects extends EffectsOf<App>
+>(a: App, v: (a: App, s: State) => View): SFx<Effects & Render<View, Actions>, Step<Effects, State, Actions>, Step<Effects, State, Actions>> =>
   ({ state, effects, pending }) => (env, k) => {
     const rendering = fork(render<View, Actions>(v(a, state)), env)
     const started = effects.map(fx => fork(fx, env))
