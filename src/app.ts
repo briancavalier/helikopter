@@ -30,12 +30,11 @@ export type Step<H, S, A> = {
 }
 
 // TODO: Find a way to simplify or eliminate the need for this
-// Trying to derive a set of sections from arbitrary objects
+// Trying to derive a set of actions from arbitrary objects
 // won' scale.  Need to rethink
 export type ActionOf<F> = Ret<F> extends Action<any, any> ? Ret<F>
   : F extends Action<any, any> ? F
   : never
-export type NotArray<A, F> = A extends any[] ? never : F
 export type ActionsOf<I> = Maybe<{ [K in keyof I]: ActionOf<I[K]> }[keyof I]>
 
 export type Arg<F> = F extends (a: infer A, ...rest: any[]) => any ? A : never
@@ -45,7 +44,6 @@ export type Fst<P> = P extends Update<any, infer A> ? A : P
 export type Snd<P> = P extends Update<infer A, any> ? A : never
 export type Env<F> = F extends Fx<infer H, any> ? H : never
 export type EnvA<FA> = FA extends ReadonlyArray<infer F> ? Env<F> : never
-// type Res<F> = F extends Fx<any, infer R> ? R : never
 
 export type InputOf<A> = U2I<Arg<ActionsOf<A>>>
 export type OutputOf<A> = U2I<Fst<Ret<ActionsOf<A>>>>

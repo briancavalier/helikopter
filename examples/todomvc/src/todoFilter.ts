@@ -1,11 +1,11 @@
 import { Todo } from './todoList'
 import { Cancel, Fx, map, Maybe, withEffects } from '../../../src'
 
-export type Route = {
-	route: (k: (s: string) => void) => Cancel,
+export type Route<A> = {
+	route: (k: (s: A) => void) => Cancel,
 }
 
-export const route = (): Fx<Route, string> =>
+export const route = <A> (): Fx<Route<A>, A> =>
 	({ route }, k) => route(k)
 
 export type Filter = '/active' | '/completed'
