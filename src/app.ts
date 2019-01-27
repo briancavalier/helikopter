@@ -1,91 +1,74 @@
-import { Fiber, fork, select } from './fiber'
-import { Fx } from './fx'
-import { Render, render } from './render'
-import { loop, SFx } from './run'
+import { Fiber, fork, Forked, Fx, loop, Render, render, select, Stepper } from '.'
 
-// TODO: Move this
-export type Maybe<A> = null | A
+export type Maybe<A> = A | null
 
-// Convert Union to Intersection
 type U2I<U> =
   (U extends any ? (u: U) => void : never) extends ((i: infer I) => void) ? I : never
 
-export class Update<E, A> {
-  constructor (public readonly state: A, public readonly effects: E) {}
+export class WithEffects<A, E> {
+  constructor(public readonly value: A, public readonly effects: E) { }
 }
 
-export const withEffects = <E, S>(state: S, effects: E): Update<E, S> =>
-  new Update(state, effects)
+export const withEffects = <A, E>(value: A, effects: E): WithEffects<A, E> =>
+  new WithEffects(value, effects)
 
-export type Action<E, A> = (a: A, p: Partial<Fibers<E>>) => (Partial<A> | Update<E, Partial<A>>)
-export type PureAction<A> = (a: A) => Partial<A>
-type Fibers<F> = {
-  [K in keyof F]: F[K] extends Fx<any, infer A> ? Fiber<A> : never
+export type App<E, S, T, A, B = A> = U2I<Interpreters<E, S, T, A, B>>
+export type Handler<E, S, A> = App<E, S, S, A, A>
+export type PureHandler<S, A> = App<never, S, S, A, A>
+
+export type Interpreters<Env, S, T, A, B> = S extends Op<infer K, infer V> ? Keyed<K, Interpreter<Env, V, T, A, B>> : never
+export type Keyed<K, V> = K extends string ? Record<K, V> : never
+
+export type Interpreter<Env, S, T, A, B> = (a: A, s: S, f: ReadonlyArray<Forked>) => Result<Env, T, Partial<B>>
+export type Result<Env, T, B> = B | WithEffects<B, ReadonlyArray<Fx<Env, T>>>
+
+export type Op<K, A = void> = { name: K, value: A }
+export function op<K extends string, A>(name: K, value: A): Op<K, A>;
+export function op<K extends string>(name: K): Op<K, void>;
+export function op<K extends string, A>(name: K, value?: A): Op<K, void> | Op<K, A> {
+  return value === undefined ? { name, value: undefined } : { name, value }
 }
 
-export type Step<H, S, A> = {
+export type EnvOf<I> = U2I<{
+  [K in keyof I]: I[K] extends Interpreter<infer E, any, any, any, any> ? E : never
+}[keyof I]>
+export type StateOf<I> = U2I<{
+  [K in keyof I]: I[K] extends (a: infer A, ...rest: any[]) => any ? A : never
+}[keyof I]>
+export type OpsOf<I> = {
+  [K in keyof I]: I[K] extends Interpreter<any, infer S, any, any, any> ? Op<K, S> : never
+}[keyof I]
+
+export type Step<E, S, A> = {
   state: S,
-  effects: ReadonlyArray<Fx<H, A>>,
+  effects: ReadonlyArray<Fx<E, A>>,
   pending: ReadonlyArray<Fiber<A>>
 }
 
-// TODO: Find a way to simplify or eliminate the need for this
-// Trying to derive a set of actions from arbitrary objects
-// won' scale.  Need to rethink
-export type ActionOf<F> = Ret<F> extends Action<any, any> ? Ret<F>
-  : F extends Action<any, any> ? F
-  : never
-export type ActionsOf<I> = Maybe<{ [K in keyof I]: ActionOf<I[K]> }[keyof I]>
+export const runApp = <I extends Handler<any, any, any>, V>(i: I, v: (a: StateOf<I>) => V, a: StateOf<I>, e: ReadonlyArray<Fx<EnvOf<I>, OpsOf<I>>> = []): Fx<EnvOf<I> & Render<V, OpsOf<I>>, never> =>
+  loop(step(i, v))({ state: a, effects: e, pending: [] })
 
-export type Arg<F> = F extends (a: infer A, ...rest: any[]) => any ? A : never
-export type Ret<F> = F extends (...args: any[]) => infer A ? A : never
-
-export type Fst<P> = P extends Update<any, infer A> ? A : P
-export type Snd<P> = P extends Update<infer A, any> ? A : never
-export type Env<F> = F extends Fx<infer H, any> ? H : never
-export type EnvA<FA> = FA extends ReadonlyArray<infer F> ? Env<F> : never
-
-export type InputOf<A> = U2I<Arg<ActionsOf<A>>>
-export type OutputOf<A> = U2I<Fst<Ret<ActionsOf<A>>>>
-export type StateOf<A> = InputOf<A> & OutputOf<A>
-export type EffectsOf<A> = U2I<EnvA<Snd<Ret<ActionsOf<A>>>>>
-
-export const runApp = <App, View>(
-  a: App,
-  v: (a: App, s: StateOf<App>) => View,
-  state: StateOf<App>,
-  effects: Fx<EffectsOf<App>, ActionsOf<App>>[] = []
-): Fx<EffectsOf<App> & Render<View, ActionsOf<App>>, Step<EffectsOf<App>, StateOf<App>, ActionsOf<App>>> =>
-  loop(step<App, View, StateOf<App>, ActionsOf<App>, EffectsOf<App>>(a, v), { state, effects, pending: [] })
-
-const step = <
-  App,
-  View,
-  State,
-  Actions,
-  Effects extends EffectsOf<App>
->(a: App, v: (a: App, s: State) => View): SFx<Effects & Render<View, Actions>, Step<Effects, State, Actions>, Step<Effects, State, Actions>> =>
+const step = <I, V>(i: I, v: (a: StateOf<I>) => V): Stepper<EnvOf<I> & Render<V, OpsOf<I>>, Step<EnvOf<I>, StateOf<I>, OpsOf<I>>, Step<EnvOf<I>, StateOf<I>, OpsOf<I>>> =>
   ({ state, effects, pending }) => (env, k) => {
-    const rendering = fork(render<View, Actions>(v(a, state)), env)
+    const rendering = fork(render<V, OpsOf<I>>(v(state)), env)
     const started = effects.map(fx => fork(fx, env))
-    return select(fs => k(handleStep<State, Actions, Effects>(state, fs)), ...pending, ...started, rendering)
+    return select(fs => k(handleStep(i, state, fs)), ...pending, ...started, rendering)
   }
 
-const handleStep = <
-  State,
-  Actions,
-  Effects
->(state: State, fs: ReadonlyArray<Fiber<Actions>>): Step<Effects, State, Actions> => {
+const handleStep = <I>(i: I, state: StateOf<I>, fs: ReadonlyArray<Fiber<OpsOf<I>>>): Step<EnvOf<I>, StateOf<I>, OpsOf<I>> => {
   const next = fs.reduce((s, f) => {
     if (f.state.status !== 1 || f.state.value == null) return s
 
     // TODO: Allow type-specific merging of prev and new State
     // Currently, this only works if State is an object
-    const update: Partial<State> | Update<ReadonlyArray<Fx<Effects, Actions>>, Partial<State>> = (f.state.value as any)(s.state, fs)
-    return update instanceof Update
-      ? { state: { ...s.state, ...update.state }, effects: [...s.effects, ...update.effects] }
+    const update: Result<EnvOf<I>, OpsOf<I>, StateOf<I>> = interpret(i, s.state, f.state.value, fs)
+    return update instanceof WithEffects
+      ? { state: { ...s.state, ...update.value }, effects: [...s.effects, ...update.effects] }
       : { state: { ...s.state, ...update }, effects: s.effects }
-  }, { state, effects: [] as ReadonlyArray<Fx<Effects, Actions>> })
+  }, { state, effects: [] as ReadonlyArray<Fx<EnvOf<I>, OpsOf<I>>> })
 
   return { ...next, pending: fs.filter(f => f.state.status === 0) }
 }
+
+const interpret = <I extends Handler<any, any, any>>(i: I, a: StateOf<I>, s: OpsOf<I>, f: ReadonlyArray<Forked>): Result<EnvOf<I>, OpsOf<I>, StateOf<I>> =>
+  (i as any)[s.name](a, s.value, f)

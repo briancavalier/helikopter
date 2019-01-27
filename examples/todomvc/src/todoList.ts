@@ -1,27 +1,34 @@
+import { Op, PureHandler } from '../../../src'
+
 export type Todo = { description: string, completed: boolean }
 
 export type TodoListState = { todos: ReadonlyArray<Todo> }
 
-export const countActive = (s: TodoListState): number =>
-	s.todos.reduce((count, { completed }) => completed ? count : count + 1, 0)
+export type TodoUpdate = { todo: Todo, completed: boolean }
 
-export const addTodo = (description: string) => (s: TodoListState): TodoListState =>
-	({ todos: [...s.todos, { description, completed: false }] })
+export type TodoAction =
+	| Op<'add', string>
+	| Op<'remove', Todo>
+	| Op<'update', TodoUpdate>
+	| Op<'removeCompleted'>
+	| Op<'updateAll', boolean>
 
-export const removeTodo = (todo: Todo) => (s: TodoListState): TodoListState =>
-  ({ todos: s.todos.filter(t => t !== todo) })
+export const todoList: PureHandler<TodoAction, TodoListState> = {
+	add: ({ todos }: TodoListState, description: string): TodoListState =>
+		({ todos: [...todos, { description, completed: false }] }),
 
-export const updateCompleted = (completed: boolean, todo: Todo) => (s: TodoListState): TodoListState =>
-	({ todos: s.todos.map(t => t === todo ? { ...t, completed } : t) })
+	remove: ({ todos }: TodoListState, todo: Todo): TodoListState =>
+		({ todos: todos.filter(t => t !== todo) }),
 
-export const removeAllCompleted = (s: TodoListState): TodoListState =>
-	({ todos: s.todos.filter(todo => !todo.completed) })
+	update: ({ todos }: TodoListState, { todo, completed }: TodoUpdate): TodoListState =>
+		({ todos: todos.map(t => t === todo ? { ...t, completed } : t) }),
 
-export const updateAllCompleted = (completed: boolean) => (s: TodoListState): TodoListState =>
-	({ todos: s.todos.map(todo => ({ ...todo, completed })) })
+	removeCompleted: ({ todos }: TodoListState): TodoListState =>
+		({ todos: todos.filter(todo => !todo.completed) }),
 
-export const todoList = {
-	countActive, addTodo, removeTodo, updateCompleted, removeAllCompleted, updateAllCompleted
+	updateAll: ({ todos }: TodoListState, completed: boolean): TodoListState =>
+		({ todos: todos.map(todo => ({ ...todo, completed })) })
 }
 
-export type TodoList = typeof todoList
+export const countActive = (todos: ReadonlyArray<Todo>): number =>
+	todos.reduce((count, { completed }) => completed ? count : count + 1, 0)
