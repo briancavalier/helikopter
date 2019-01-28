@@ -44,7 +44,7 @@ export const view = ({ todos, editing, filter }: TodoListState & TodoEditState &
 				${filterTodos(filter, todos).map(todo => html`
 				<li class="${todo.completed ? 'completed' : ''} ${editing === todo ? 'editing' : ''}">
 					<div class="view">
-						<input class="toggle" type="checkbox" .checked=${todo.completed} @change=${(e: any) => action('update', { todo, update: { completed: e.target.checked } })}>
+						<input class="toggle" type="checkbox" .checked=${todo.completed} @change=${(e: any) => action('update', { todo, completed: e.target.checked })}>
 						<label @dblclick=${() => action('beginEdit', todo)}>${todo.description}</label>
 						<button class="destroy" @click=${() => action('remove', todo)}></button>
 					</div>

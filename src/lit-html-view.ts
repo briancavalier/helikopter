@@ -1,5 +1,5 @@
+import { Cancel } from './fx'
 import { Render } from './render'
-import { Cancel } from '../experiments/effect'
 import { directive, EventPart, NodePart, Part, render as lrender, TemplateResult } from 'lit-html'
 
 export const renderLitHtml = <A> (root: Element): Render<TemplateResult, A> => {

@@ -1,4 +1,7 @@
-import { Fiber, fork, Forked, Fx, loop, Render, render, select, Stepper } from '.'
+import { Fiber, fork, Forked, select } from './fiber'
+import { Fx } from './fx'
+import { Render, render } from './render'
+import { loop, Stepper } from './run'
 
 export type Maybe<A> = A | null
 
