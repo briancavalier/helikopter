@@ -1,12 +1,12 @@
 import {
+  Action,
+  action,
   App,
   Cancel,
   fibers,
   Fibers,
   Fx,
   kill,
-  op,
-  Op,
   PureHandler,
   runApp,
   runFx,
@@ -15,7 +15,7 @@ import {
 import { renderLitHtml } from '../../src/lit-html-view'
 import { html, TemplateResult } from 'lit-html'
 
-type CountOp = Op<'inc'> | Op<'dec'> | Op<'reset'>
+type CountOp = Action<'inc'> | Action<'dec'> | Action<'reset'>
 
 type Count = { count: number }
 
@@ -27,15 +27,15 @@ const counter: PureHandler<CountOp, Count> = {
 
 //-------------------------------------------------------
 type DelayCountOp =
-  | Op<'delay', number>
-  | Op<'incDelay'>
-  | Op<'cancelDelays'>
+  | Action<'delay', number>
+  | Action<'incDelay'>
+  | Action<'cancelDelays'>
 
 type DelayedCount = Count & { delayed: number }
 
 const delayCounter: App<Delay & Fibers, DelayCountOp, DelayCountOp | void, DelayedCount> = {
   delay: (c, ms) =>
-    withEffects({ delayed: c.delayed + 1 }, [delay(op('incDelay'), ms)]),
+    withEffects({ delayed: c.delayed + 1 }, [delay(action('incDelay'), ms)]),
   incDelay: c =>
     ({ count: c.count + 1, delayed: c.delayed - 1 }),
   cancelDelays: (c, _, delays) =>
@@ -54,13 +54,13 @@ const delay = <A>(a: A, ms: number): Fx<Delay, A> =>
 const view = ({ count, delayed }: DelayedCount): TemplateResult => html`
   <p>count: ${count} (delayed: ${delayed})</p>
   <p>
-    <button @click=${() => op('inc')}>+</button>
-    <button @click=${() => op('dec')}>-</button>
-    <button @click=${() => op('reset')} ?disabled=${count === 0}>Reset</button>
+    <button @click=${() => action('inc')}>+</button>
+    <button @click=${() => action('dec')}>-</button>
+    <button @click=${() => action('reset')} ?disabled=${count === 0}>Reset</button>
   </p>
   <p>
-    <button @click=${()=> op('delay', 1000)}>+ Delay</button>
-    <button @click=${()=> op('cancelDelays')} ?disabled=${ delayed === 0 }>Cancel Delays</button>
+    <button @click=${()=> action('delay', 1000)}>+ Delay</button>
+    <button @click=${()=> action('cancelDelays')} ?disabled=${ delayed === 0 }>Cancel Delays</button>
   </p>
 `
 

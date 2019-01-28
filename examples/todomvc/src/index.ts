@@ -5,14 +5,16 @@ import { view } from './view'
 import { Cancel, runApp, runFx } from '../../../src'
 import { renderLitHtml } from '../../../src/lit-html-view'
 
-export const todoApp = { ...todoList, ...todoEdit, ...todoFilter }
+type TodoAppAction = TodoAction | TodoEditAction | TodoFilterAction
+
+const todoApp = { ...todoList, ...todoEdit, ...todoFilter }
 
 const initialState = { todos: [], editing: null, filter: null }
 
 const appFx = runApp(todoApp, view, initialState, [filterUpdate])
 
 runFx(appFx, {
-	...renderLitHtml<TodoAction | TodoEditAction | TodoFilterAction>(document.body),
+	...renderLitHtml<TodoAppAction>(document.body),
 	route (k: (r: string) => void): Cancel {
 		const handler = () => k(window.location.hash.slice(1))
 		window.addEventListener('hashchange', handler, { once: true })

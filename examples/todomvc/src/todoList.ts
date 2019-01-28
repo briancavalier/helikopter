@@ -1,19 +1,21 @@
-import { Op, PureHandler } from '../../../src'
+import { Action, PureHandler } from '../../../src'
 
-export type Todo = { description: string, completed: boolean }
+export type Todo = { readonly description: string, readonly completed: boolean }
 
-export type TodoListState = { todos: ReadonlyArray<Todo> }
+export type TodoUpdate = { readonly todo: Todo, readonly completed: boolean }
 
-export type TodoUpdate = { todo: Todo, completed: boolean }
+export type TodoListState = { readonly todos: ReadonlyArray<Todo> }
 
 export type TodoAction =
-	| Op<'add', string>
-	| Op<'remove', Todo>
-	| Op<'update', TodoUpdate>
-	| Op<'removeCompleted'>
-	| Op<'updateAll', boolean>
+	| Action<'add', string>
+	| Action<'remove', Todo>
+	| Action<'update', TodoUpdate>
+	| Action<'removeCompleted'>
+	| Action<'updateAll', boolean>
 
-export const todoList: PureHandler<TodoAction, TodoListState> = {
+export type TodoList = PureHandler<TodoAction, TodoListState>
+
+export const todoList: TodoList = {
 	add: ({ todos }: TodoListState, description: string): TodoListState =>
 		({ todos: [...todos, { description, completed: false }] }),
 

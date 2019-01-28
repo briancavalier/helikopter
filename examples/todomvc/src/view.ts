@@ -1,7 +1,7 @@
 import { TodoEditAction, TodoEditState } from './todoEdit'
 import { filterTodos, TodoFilterState } from './todoFilter'
-import { countActive, Todo, TodoAction, TodoListState } from './todoList'
-import { Maybe, op } from '../../../src'
+import { countActive, TodoAction, TodoListState } from './todoList'
+import { action, Maybe } from '../../../src'
 import { html, TemplateResult } from 'lit-html'
 
 const ENTER_KEY = 'Enter'
@@ -12,16 +12,16 @@ const handleAddKey = (e: any): Maybe<TodoAction> => {
 
 	const description = e.target.value.trim()
 	e.target.value = ''
-	return op('add', description)
+	return action('add', description)
 }
 
 const handleEditKey = (e: any): Maybe<TodoEditAction> =>
-	e.key === ESC_KEY ? op('cancelEdit')
-		: e.key === ENTER_KEY ? op('saveEdit', e.target.value.trim())
+	e.key === ESC_KEY ? action('cancelEdit')
+		: e.key === ENTER_KEY ? action('saveEdit', e.target.value.trim())
 		: null
 
 const handleSaveEdit = (e: any): TodoEditAction =>
-	op('saveEdit', e.target.value.trim())
+	action('saveEdit', e.target.value.trim())
 
 const showIf = (condition: boolean): string => condition ? '' : 'display: none'
 
@@ -38,15 +38,15 @@ export const view = ({ todos, editing, filter }: TodoListState & TodoEditState &
 		</header>
 		<!-- This section should be hidden by default and shown when there are todos -->
 		<section class="main" .style="${showList}">
-			<input id="toggle-all" class="toggle-all" type="checkbox" .checked=${active === 0} @change=${(e: any) => op('updateAll', e.target.checked)}>
+			<input id="toggle-all" class="toggle-all" type="checkbox" .checked=${active === 0} @change=${(e: any) => action('updateAll', e.target.checked)}>
 			<label for="toggle-all">Mark all as complete</label>
 			<ul class="todo-list">
 				${filterTodos(filter, todos).map(todo => html`
 				<li class="${todo.completed ? 'completed' : ''} ${editing === todo ? 'editing' : ''}">
 					<div class="view">
-						<input class="toggle" type="checkbox" .checked=${todo.completed} @change=${(e: any) => op('update', { todo, completed: e.target.checked })}>
-						<label @dblclick=${() => op('beginEdit', todo)}>${todo.description}</label>
-						<button class="destroy" @click=${() => op('remove', todo)}></button>
+						<input class="toggle" type="checkbox" .checked=${todo.completed} @change=${(e: any) => action('update', { todo, update: { completed: e.target.checked } })}>
+						<label @dblclick=${() => action('beginEdit', todo)}>${todo.description}</label>
+						<button class="destroy" @click=${() => action('remove', todo)}></button>
 					</div>
 					<input class="edit" value="${todo.description}" autofocus @keydown=${handleEditKey} @blur=${handleSaveEdit}>
 				</li>
@@ -61,7 +61,7 @@ export const view = ({ todos, editing, filter }: TodoListState & TodoEditState &
 				<li><a class="${filter === '/completed' ? 'selected' : ''}" href="#/completed">Completed</a></li>
 			</ul>
 			<!-- Hidden if no completed items are left ↓ -->
-			<button class="clear-completed" .style="${showClear}" @click=${() => op('removeCompleted')}>Clear completed</button>
+			<button class="clear-completed" .style="${showClear}" @click=${() => action('removeCompleted')}>Clear completed</button>
 		</footer>
 	</section>
 	<footer class="info">
