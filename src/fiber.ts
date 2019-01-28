@@ -4,18 +4,18 @@ export type Handler<A> = (a: A) => void
 export type Unhandle = () => void
 
 export type FiberState<A> =
-  | { status: 0, cancel: Cancel, handlers: Handler<Fiber<A>>[] }
-  | { status: 1, value: A }
-  | { status: -1 }
+  | { readonly status: 0, readonly cancel: Cancel, readonly handlers: Handler<Fiber<A>>[] }
+  | { readonly status: 1, readonly value: A }
+  | { readonly status: -1 }
 
 export class Fiber<A> {
   constructor(public state: FiberState<A>) {}
 }
 
 export type ForkedState =
-  | { status: 0, cancel: Cancel }
-  | { status: 1 }
-  | { status: -1 }
+  | { readonly status: 0, readonly cancel: Cancel }
+  | { readonly status: 1 }
+  | { readonly status: -1 }
 
 export interface Forked { state: ForkedState }
 

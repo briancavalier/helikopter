@@ -17,12 +17,16 @@ export type Handler<E, S, A> = App<E, S, S, A, A>
 export type PureHandler<S, A> = App<never, S, S, A, A>
 
 export type Interpreters<Env, S, T, A, B> = S extends Op<infer K, infer V> ? Keyed<K, Interpreter<Env, V, T, A, B>> : never
-export type Keyed<K, V> = K extends string ? Record<K, V> : never
+export type Keyed<K, V> = K extends string ? Readonly<Record<K, V>> : never
 
 export type Interpreter<Env, S, T, A, B> = (a: A, s: S, f: ReadonlyArray<Forked>) => Result<Env, T, Partial<B>>
 export type Result<Env, T, B> = B | WithEffects<B, ReadonlyArray<Fx<Env, T>>>
 
-export type Op<K, A = void> = { name: K, value: A }
+export type Op<K, A = void> = {
+  readonly name: K,
+  readonly value: A
+}
+
 export function op<K extends string, A>(name: K, value: A): Op<K, A>;
 export function op<K extends string>(name: K): Op<K, void>;
 export function op<K extends string, A>(name: K, value?: A): Op<K, void> | Op<K, A> {
@@ -30,19 +34,19 @@ export function op<K extends string, A>(name: K, value?: A): Op<K, void> | Op<K,
 }
 
 export type EnvOf<I> = U2I<{
-  [K in keyof I]: I[K] extends Interpreter<infer E, any, any, any, any> ? E : never
+  readonly [K in keyof I]: I[K] extends Interpreter<infer E, any, any, any, any> ? E : never
 }[keyof I]>
 export type StateOf<I> = U2I<{
-  [K in keyof I]: I[K] extends (a: infer A, ...rest: any[]) => any ? A : never
+  readonly [K in keyof I]: I[K] extends (a: infer A, ...rest: any[]) => any ? A : never
 }[keyof I]>
 export type OpsOf<I> = {
-  [K in keyof I]: I[K] extends Interpreter<any, infer S, any, any, any> ? Op<K, S> : never
+  readonly [K in keyof I]: I[K] extends Interpreter<any, infer S, any, any, any> ? Op<K, S> : never
 }[keyof I]
 
 export type Step<E, S, A> = {
-  state: S,
-  effects: ReadonlyArray<Fx<E, A>>,
-  pending: ReadonlyArray<Fiber<A>>
+  readonly state: S,
+  readonly effects: ReadonlyArray<Fx<E, A>>,
+  readonly pending: ReadonlyArray<Fiber<A>>
 }
 
 export const runApp = <I extends Handler<any, any, any>, V>(i: I, v: (a: StateOf<I>) => V, a: StateOf<I>, e: ReadonlyArray<Fx<EnvOf<I>, OpsOf<I>>> = []): Fx<EnvOf<I> & Render<V, OpsOf<I>>, never> =>
