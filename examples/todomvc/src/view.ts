@@ -1,13 +1,13 @@
 import { TodoEditAction, TodoEditState } from './todoEdit'
 import { filterTodos, TodoFilterState } from './todoFilter'
 import { countActive, TodoAction, TodoListState } from './todoList'
-import { action, Maybe } from '../../../src'
+import { action } from '../../../src'
 import { html, TemplateResult } from 'lit-html'
 
 const ENTER_KEY = 'Enter'
 const ESC_KEY = 'Escape'
 
-const handleAddKey = (e: any): Maybe<TodoAction> => {
+const handleAddKey = (e: any): TodoAction | null => {
 	if (e.key !== ENTER_KEY || e.target.value.trim() === '') return null
 
 	const description = e.target.value.trim()
@@ -15,7 +15,7 @@ const handleAddKey = (e: any): Maybe<TodoAction> => {
 	return action('add', description)
 }
 
-const handleEditKey = (e: any): Maybe<TodoEditAction> =>
+const handleEditKey = (e: any): TodoEditAction | null =>
 	e.key === ESC_KEY ? action('cancelEdit')
 		: e.key === ENTER_KEY ? action('saveEdit', e.target.value.trim())
 		: null
@@ -45,8 +45,8 @@ export const view = ({ todos, editing, filter }: TodoListState & TodoEditState &
 				<li class="${todo.completed ? 'completed' : ''} ${editing === todo ? 'editing' : ''}">
 					<div class="view">
 						<input class="toggle" type="checkbox" .checked=${todo.completed} @change=${(e: any) => action('update', { todo, completed: e.target.checked })}>
-						<label @dblclick=${() => action('beginEdit', todo)}>${todo.description}</label>
-						<button class="destroy" @click=${() => action('remove', todo)}></button>
+						<label @dblclick=${action('beginEdit', todo)}>${todo.description}</label>
+						<button class="destroy" @click=${action('remove', todo)}></button>
 					</div>
 					<input class="edit" value="${todo.description}" autofocus @keydown=${handleEditKey} @blur=${handleSaveEdit}>
 				</li>
@@ -61,7 +61,7 @@ export const view = ({ todos, editing, filter }: TodoListState & TodoEditState &
 				<li><a class="${filter === '/completed' ? 'selected' : ''}" href="#/completed">Completed</a></li>
 			</ul>
 			<!-- Hidden if no completed items are left ↓ -->
-			<button class="clear-completed" .style="${showClear}" @click=${() => action('removeCompleted')}>Clear completed</button>
+			<button class="clear-completed" .style="${showClear}" @click=${action('removeCompleted')}>Clear completed</button>
 		</footer>
 	</section>
 	<footer class="info">

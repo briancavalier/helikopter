@@ -1,6 +1,7 @@
-import { chain, Fx } from './fx'
+import { Fx } from './fx'
+import { ActionsOf, EnvOf, Handler, StateOf, step } from './handler'
+import { loop } from './reactive'
+import { Render } from '.'
 
-export type Stepper<Env, S, T> = (s: S) => Fx<Env, T>
-
-export const loop = <E, S> (sfx: Stepper<E, S, S>): Stepper<E, S, never> =>
-  s => chain(loop(sfx), sfx(s))
+export const runApp = <I extends Handler<any, any, any>, V>(i: I, v: (a: StateOf<I>) => V, a: StateOf<I>, e: ReadonlyArray<Fx<EnvOf<I>, ActionsOf<I>>> = []): Fx<EnvOf<I> & Render<V, ActionsOf<I>>, never> =>
+  loop(step(i, v))({ state: a, effects: e, pending: [] })

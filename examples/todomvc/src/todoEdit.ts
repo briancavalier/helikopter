@@ -1,16 +1,14 @@
 import { Todo, TodoListState } from './todoList'
-import { Action, Maybe, PureHandler } from '../../../src'
+import { Action, PureHandler } from '../../../src'
 
-export type TodoEditState = TodoListState & { readonly editing: Maybe<Todo> }
+export type TodoEditState = TodoListState & { readonly editing: Todo | null }
 
 export type TodoEditAction =
 	| Action<'beginEdit', Todo>
 	| Action<'cancelEdit'>
 	| Action<'saveEdit', string>
 
-export type TodoEdit = PureHandler<TodoEditAction, TodoEditState>
-
-export const todoEdit: TodoEdit = {
+export const todoEdit: PureHandler<TodoEditAction, TodoEditState> = {
 	beginEdit: (s: TodoEditState, editing: Todo): TodoEditState =>
 		({ ...s, editing }),
 

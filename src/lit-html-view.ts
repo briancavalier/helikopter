@@ -23,7 +23,9 @@ const wrapHandlers = <A>(k: (a: A) => void, t: TemplateResult): TemplateResult =
 
 const intent = directive((k: (a: any) => void, x: any) => (part: Part) =>
   part.setValue(
-    part instanceof EventPart ? (e: Event) => k(x(e))
+    // Turn pure functions into dom event handlers that forward results to k
+    part instanceof EventPart ? typeof x === 'function' ? (e: Event) => k(x(e)) : (e: Event) => k(x)
+    // recurse
     : part instanceof NodePart
       ? Array.isArray(x) ? x.map(x => x instanceof TemplateResult ? wrapHandlers(k, x) : x)
         : x instanceof TemplateResult ? wrapHandlers(k, x)

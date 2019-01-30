@@ -13,9 +13,7 @@ export type TodoAction =
 	| Action<'removeCompleted'>
 	| Action<'updateAll', boolean>
 
-export type TodoList = PureHandler<TodoAction, TodoListState>
-
-export const todoList: TodoList = {
+export const todoList: PureHandler<TodoAction, TodoListState> = {
 	add: ({ todos }: TodoListState, description: string): TodoListState =>
 		({ todos: [...todos, { description, completed: false }] }),
 
