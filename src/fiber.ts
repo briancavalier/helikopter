@@ -1,16 +1,23 @@
 import { Cancel, Fx, mapTo, runFx, uncancelable } from './fx'
 
-export type Handler<A> = (a: A) => void
+export type Handle<A> = (a: A) => void
 export type Unhandle = () => void
 
 export type FiberState<A> =
-  | { status: 0, cancel: Cancel, handlers: Handler<Fiber<A>>[] }
-  | { status: 1, value: A }
-  | { status: -1 }
+  | { readonly status: 0, readonly cancel: Cancel, readonly handlers: Handle<Fiber<A>>[] }
+  | { readonly status: 1, readonly value: A }
+  | { readonly status: -1 }
 
 export class Fiber<A> {
   constructor(public state: FiberState<A>) {}
 }
+
+export type ForkedState =
+  | { readonly status: 0, readonly cancel: Cancel }
+  | { readonly status: 1 }
+  | { readonly status: -1 }
+
+export interface Forked { state: ForkedState }
 
 export const createFiber = <A> (cancel: Cancel): Fiber<A> =>
   new Fiber({ status: 0, cancel, handlers: [] })
@@ -27,7 +34,7 @@ export const complete = <A> (value: A, f: Fiber<A>): void => {
 }
 
 export const fibers = {
-  kill <A> (f: Fiber<A>, k: (r: void) => void): Cancel {
+  kill (f: Forked, k: (r: void) => void): Cancel {
     if (f.state.status !== 0) k()
     else {
       const { cancel } = f.state
@@ -42,24 +49,24 @@ export type Fibers = typeof fibers
 
 export const fork = <H, A> (fx: Fx<H, A>, h: H): Fiber<A> => {
   const fiber = createFiber<A>(k => cancel(k))
-  const cancel: Cancel = runFx(fx, h, a => complete(a, fiber))
+  const cancel: Cancel = runFx(fx, h,a => complete(a, fiber))
   return fiber
 }
 
-export const kill = (f: Fiber<unknown>): Fx<Fibers, void> =>
+export const kill = (f: Forked): Fx<Fibers, void> =>
   ({ kill }, k) => kill(f, k)
 
-export const killWith = <A> (a: A, f: Fiber<unknown>): Fx<Fibers, A> =>
+export const killWith = <A> (a: A, f: Forked): Fx<Fibers, A> =>
   mapTo(a, kill(f))
 
-export const select = <Fibers extends Fiber<any>[]> (h: Handler<Fibers>, ...fs: Fibers): Unhandle => {
+export const select = <Fibers extends Fiber<any>[]> (h: Handle<Fibers>, ...fs: Fibers): Unhandle => {
   const ready = fs.some(f => f.state.status === 1)
   if (ready) {
     h(fs)
     return () => {}
   }
 
-  const wrapped: Handler<Fibers[number]> = () => {
+  const wrapped: Handle<Fibers[number]> = () => {
     unhandleAll()
     h(fs)
   }
@@ -70,7 +77,7 @@ export const select = <Fibers extends Fiber<any>[]> (h: Handler<Fibers>, ...fs: 
   return unhandleAll
 }
 
-export const join = <A> (h: Handler<Fiber<A>>, f: Fiber<A>): Unhandle => {
+export const join = <A> (h: Handle<Fiber<A>>, f: Fiber<A>): Unhandle => {
   if(f.state.status === -1) return () => {}
   else if(f.state.status === 0) return addToHandlers(h, f.state.handlers)
 

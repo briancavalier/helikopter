@@ -1,33 +1,32 @@
-import { TodoEdit } from './todoEdit'
-import { filterTodos, TodoFilter } from './todoFilter'
-import { Todo, TodoList } from './todoList'
-import { ActionsOf, Maybe, StateOf } from '../../../src'
+import { TodoEditAction, TodoEditState } from './todoEdit'
+import { filterTodos, TodoFilterState } from './todoFilter'
+import { countActive, TodoAction, TodoListState } from './todoList'
+import { action } from '../../../src'
 import { html, TemplateResult } from 'lit-html'
 
 const ENTER_KEY = 'Enter'
 const ESC_KEY = 'Escape'
 
-const handleAddKey = ({ addTodo }: TodoList) => (e: any): Maybe<ActionsOf<TodoList>> => {
+const handleAddKey = (e: any): TodoAction | null => {
 	if (e.key !== ENTER_KEY || e.target.value.trim() === '') return null
 
 	const description = e.target.value.trim()
 	e.target.value = ''
-	return addTodo(description)
+	return action('add', description)
 }
 
-const handleEditKey = ({ cancelEdit, saveEdit }: TodoEdit) => (e: any): Maybe<ActionsOf<TodoEdit>> =>
-	e.key === ESC_KEY ? cancelEdit
-		: e.key === ENTER_KEY ? saveEdit(e.target.value.trim())
+const handleEditKey = (e: any): TodoEditAction | null =>
+	e.key === ESC_KEY ? action('cancelEdit')
+		: e.key === ENTER_KEY ? action('saveEdit', e.target.value.trim())
 		: null
 
-const handleCompleteEdit = ({ saveEdit }: TodoEdit) => (e: any): ActionsOf<TodoEdit> =>
-	saveEdit(e.target.value.trim())
+const handleSaveEdit = (e: any): TodoEditAction =>
+	action('saveEdit', e.target.value.trim())
 
 const showIf = (condition: boolean): string => condition ? '' : 'display: none'
 
-export const view = (todoApp: TodoList & TodoEdit, state: StateOf<TodoList & TodoEdit & TodoFilter>): TemplateResult => {
-	const { todos, editing, filter } = state
-	const active = todoApp.countActive(state)
+export const view = ({ todos, editing, filter }: TodoListState & TodoEditState & TodoFilterState): TemplateResult => {
+	const active = countActive(todos)
 	const showList = showIf(todos.length > 0)
 	const showClear = showIf(todos.length > active)
 
@@ -35,21 +34,21 @@ export const view = (todoApp: TodoList & TodoEdit, state: StateOf<TodoList & Tod
 	<section class="todoapp">
 		<header class="header">
 			<h1>todos</h1>
-			<input class="new-todo" placeholder="What needs to be done?" autofocus @keydown=${handleAddKey(todoApp)}>
+			<input class="new-todo" placeholder="What needs to be done?" autofocus @keydown=${handleAddKey}>
 		</header>
 		<!-- This section should be hidden by default and shown when there are todos -->
 		<section class="main" .style="${showList}">
-			<input id="toggle-all" class="toggle-all" type="checkbox" .checked=${active === 0} @change=${(e: any) => todoApp.updateAllCompleted(e.target.checked)}>
+			<input id="toggle-all" class="toggle-all" type="checkbox" .checked=${active === 0} @change=${(e: any) => action('updateAll', e.target.checked)}>
 			<label for="toggle-all">Mark all as complete</label>
 			<ul class="todo-list">
-				${filterTodos(filter, todos).map((todo: Todo) => html`
+				${filterTodos(filter, todos).map(todo => html`
 				<li class="${todo.completed ? 'completed' : ''} ${editing === todo ? 'editing' : ''}">
 					<div class="view">
-						<input class="toggle" type="checkbox" .checked=${todo.completed} @change=${(e: any) => todoApp.updateCompleted(e.target.checked, todo)}>
-						<label @dblclick=${() => todoApp.beginEdit(todo)}>${todo.description}</label>
-						<button class="destroy" @click=${() => todoApp.removeTodo(todo)}></button>
+						<input class="toggle" type="checkbox" .checked=${todo.completed} @change=${(e: any) => action('update', { todo, completed: e.target.checked })}>
+						<label @dblclick=${action('beginEdit', todo)}>${todo.description}</label>
+						<button class="destroy" @click=${action('remove', todo)}></button>
 					</div>
-					<input class="edit" value="${todo.description}" autofocus @keydown=${handleEditKey(todoApp)} @blur=${handleCompleteEdit(todoApp)}>
+					<input class="edit" value="${todo.description}" autofocus @keydown=${handleEditKey} @blur=${handleSaveEdit}>
 				</li>
 				`)}
 			</ul>
@@ -62,7 +61,7 @@ export const view = (todoApp: TodoList & TodoEdit, state: StateOf<TodoList & Tod
 				<li><a class="${filter === '/completed' ? 'selected' : ''}" href="#/completed">Completed</a></li>
 			</ul>
 			<!-- Hidden if no completed items are left ↓ -->
-			<button class="clear-completed" .style="${showClear}" @click=${() => todoApp.removeAllCompleted}>Clear completed</button>
+			<button class="clear-completed" .style="${showClear}" @click=${action('removeCompleted')}>Clear completed</button>
 		</footer>
 	</section>
 	<footer class="info">
