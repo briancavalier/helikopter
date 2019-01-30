@@ -6,14 +6,14 @@ import { html, TemplateResult } from 'lit-html'
 // First, let's make a simple, self-contained counter application
 
 // The counter can be incremented, decremented, or reset
-type CountOp = Action<'inc'> | Action<'dec'> | Action<'reset'>
+type CounterAction = Action<'inc'> | Action<'dec'> | Action<'reset'>
 
 // The counter's current state
 type Count = { count: number }
 
-// The handler for the actions.  It doesn't perform any
+// A handler for the counter actions.  It doesn't perform any
 // effects, so it's pure.
-const counter: PureHandler<CountOp, Count> = {
+const counter: PureHandler<CounterAction, Count> = {
   inc: c => ({ count: c.count + 1 }),
   dec: c => ({ count: c.count - 1 }),
   reset: () => ({ count: 0 })
@@ -23,9 +23,9 @@ const counter: PureHandler<CountOp, Count> = {
 // Next, we'll make a separate "delay counter" app, that
 // increments the counter after a delay.
 
-// Delaying computation is an effect.  Let's declare the
+// Delaying a computation is an effect.  Let's declare the
 // signature and interface for a new Delay effect.  We'll
-// supply the implementation later.
+// supply the implementation later when we run the app.
 type Delay = {
   delay: <A> (a: A, ms: number, k: (r: A) => void) => Cancel
 }
@@ -36,17 +36,19 @@ const delay = <A>(a: A, ms: number): Fx<Delay, A> =>
 // The delay counter can initiate a delay, increment the
 // counter after a delay, and cancel all pending delays (i.e.
 // those previously initiated, but which have not yet occurred)
-type DelayCountOp =
+type DelayCounterAction =
   | Action<'delay', number>
   | Action<'incDelay'>
   | Action<'cancelDelays'>
 
 // Reuse the counter state, but with a new field to track
 // pending delays.
-type DelayedCount = Count & { delayed: number }
+type DelayCount = Count & { delayed: number }
 
-// Handle the delay counter action
-const delayCounter: Handler<Delay & Fibers, DelayCountOp, DelayedCount> = {
+// Handle the delay counter action.  This handler needs to
+// use 2 effects: Delay (which we just defined), and Fibers
+// which we can use to kill (cancel) pending delay effects.
+const delayCounter: Handler<Delay & Fibers, DelayCounterAction, DelayCount> = {
   delay: (c, ms) =>
     withEffects({ ...c, delayed: c.delayed + 1 }, [delay(action('incDelay'), ms)]),
   incDelay: c =>
@@ -58,7 +60,7 @@ const delayCounter: Handler<Delay & Fibers, DelayCountOp, DelayedCount> = {
 //-------------------------------------------------------
 // Now we need a view to display the counter and delays and
 // to allow the user to interact.
-const view = ({ count, delayed }: DelayedCount): TemplateResult => html`
+const view = ({ count, delayed }: DelayCount): TemplateResult => html`
   <p>count: ${count} (delayed: ${delayed})</p>
   <p>
     <button @click=${action('inc')}>+</button>
@@ -85,7 +87,7 @@ const appFx = runApp(app, view, { count: 0, delayed: 0 })
 // we need to supply their implementations.
 runFx(appFx, {
   ...fibers,
-  ...renderLitHtml<CountOp | DelayCountOp>(document.body),
+  ...renderLitHtml<CounterAction | DelayCounterAction>(document.body),
   delay: <A>(a: A, ms: number, k: (r: A) => void): Cancel => {
     const t = setTimeout(k, ms, a)
     return () => clearTimeout(t)
