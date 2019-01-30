@@ -1,6 +1,6 @@
 import { Fiber, fork, Forked, select } from './fiber'
 import { Fx } from './fx'
-import { loop, Reactive } from './reactive'
+import { Circular } from './reactive'
 import { Render, render } from './render'
 
 // Actions represent an intent to change state
@@ -57,7 +57,7 @@ export type ActionsOf<I> = {
 export type StepOf<I> = Step<EnvOf<I>, ActionsOf<I>, StateOf<I>>
 export type UpdateOf<I> = Update<EnvOf<I>, ActionsOf<I>, StateOf<I>>
 
-export const step = <H extends Handler<any, any, any>, V>(h: H, v: (a: StateOf<H>) => V): Reactive<EnvOf<H> & Render<V, ActionsOf<H>>, StepOf<H>, StepOf<H>> =>
+export const step = <H extends Handler<any, any, any>, V>(h: H, v: (a: StateOf<H>) => V): Circular<EnvOf<H> & Render<V, ActionsOf<H>>, StepOf<H>> =>
   ({ state, effects, pending }) => (env, k) => {
     const rendering = fork(render<V, ActionsOf<H>>(v(state)), env)
     const started = effects.map(fx => fork(fx, env))
