@@ -1,6 +1,6 @@
 import { Fiber, fork, Forked, select } from './fiber'
 import { Fx } from './fx'
-import { Circular } from './reactive'
+import { loop, Reactive } from './reactive'
 import { Render, render } from './render'
 
 // Actions represent an intent to change state
@@ -44,6 +44,7 @@ export type Step<E, A, S> = {
   readonly pending: ReadonlyArray<Fiber<A>>
 }
 
+// Types that recover the environment, state, and actions of a handler
 export type EnvOf<I> = U2I<{
   readonly [K in keyof I]: I[K] extends Interpreter<infer E, any, any, any, any> ? E : never
 }[keyof I]>
@@ -57,7 +58,11 @@ export type ActionsOf<I> = {
 export type StepOf<I> = Step<EnvOf<I>, ActionsOf<I>, StateOf<I>>
 export type UpdateOf<I> = Update<EnvOf<I>, ActionsOf<I>, StateOf<I>>
 
-export const step = <H extends Handler<any, any, any>, V>(h: H, v: (a: StateOf<H>) => V): Circular<EnvOf<H> & Render<V, ActionsOf<H>>, StepOf<H>> =>
+export const run = <H extends Handler<any, any, any>, V>(i: H, v: (a: StateOf<H>) => V, a: StateOf<H>, e: ReadonlyArray<Fx<EnvOf<H>, ActionsOf<H>>> = []): Fx<EnvOf<H> & Render<V, ActionsOf<H>>, never> =>
+  loop(createApp(i, v))({ state: a, effects: e, pending: [] })
+
+// Create an App from a Handler and a view function
+export const createApp = <H extends Handler<any, any, any>, V>(h: H, v: (a: StateOf<H>) => V): Reactive<EnvOf<H> & Render<V, ActionsOf<H>>, StepOf<H>, StepOf<H>> =>
   ({ state, effects, pending }) => (env, k) => {
     const rendering = fork(render<V, ActionsOf<H>>(v(state)), env)
     const started = effects.map(fx => fork(fx, env))

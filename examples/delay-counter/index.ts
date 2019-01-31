@@ -1,4 +1,4 @@
-import { Action, action, Cancel, fibers, Fibers, Fx, Handler, kill, PureHandler, runApp, runFx, withEffects } from '../../src'
+import { Action, action, Cancel, fibers, Fibers, Fx, Handler, kill, PureHandler, run, runFx, withEffects } from '../../src'
 import { renderLitHtml } from '../../src/lit-html-view'
 import { html, TemplateResult } from 'lit-html'
 
@@ -79,7 +79,7 @@ const view = ({ count, delayed }: DelayCount): TemplateResult => html`
 const app = { ...counter, ...delayCounter }
 
 // Run the app and view, starting with an initial state
-const appFx = runApp(app, view, { count: 0, delayed: 0 })
+const appFx = run(app, view, { count: 0, delayed: 0 })
 
 // Running the app produces 3 effects: Delay (defined above),
 // Render (rendering the view is an effect!), and Fibers (for
