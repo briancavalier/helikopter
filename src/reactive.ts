@@ -8,6 +8,6 @@ export type Reactive<E, A, B> = (a: A) => Fx<E, B>
 // type as its input can be tied into a circle by feeding
 // output events back as input.  The resulting Reactive
 // will recurse forever performing effects, but never
-// produce an output.
+// produce a result.
 export const loop = <E, A>(r: Reactive<E, A, A>): Reactive<E, A, never> =>
   a => chain(loop(r), r(a))

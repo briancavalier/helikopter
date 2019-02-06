@@ -1,12 +1,16 @@
 import { Todo } from './todoList'
 import { Action, action, Cancel, Fx, Handler, map, withEffects, WithEffects } from '../../../src'
 
+// -----------------------------------------------
+// A routing effect
 export type Route = {
 	route: (k: (s: string) => void) => Cancel,
 }
 
 export const route: Fx<Route, string> = ({ route }, k) => route(k)
 
+// -----------------------------------------------
+// Todo filters
 export type Filter = '/active' | '/completed'
 
 export type TodoFilterState = { readonly filter: Filter | null }

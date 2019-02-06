@@ -1,5 +1,5 @@
 import { Action, action, Cancel, fibers, Fibers, Fx, Handler, kill, PureHandler, run, runFx, withEffects } from '../../src'
-import { renderLitHtml } from '../../src/lit-html-view'
+import { renderLitHtml } from '../../src/renderLitHtml'
 import { html, TemplateResult } from 'lit-html'
 
 //-------------------------------------------------------

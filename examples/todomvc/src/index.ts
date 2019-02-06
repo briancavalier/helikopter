@@ -3,7 +3,7 @@ import { filterUpdate, todoFilter, TodoFilterAction } from './todoFilter'
 import { TodoAction, todoList } from './todoList'
 import { view } from './view'
 import { Cancel, run, runFx } from '../../../src'
-import { renderLitHtml } from '../../../src/lit-html-view'
+import { renderLitHtml } from '../../../src/renderLitHtml'
 
 type TodoAppAction = TodoAction | TodoEditAction | TodoFilterAction
 
@@ -19,5 +19,5 @@ runFx(appFx, {
 		const handler = () => k(window.location.hash.slice(1))
 		window.addEventListener('hashchange', handler, { once: true })
 		return () => window.removeEventListener('hashchange', handler)
-	},
+	}
 })
