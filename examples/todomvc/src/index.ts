@@ -2,8 +2,9 @@ import { todoEdit, TodoEditAction } from './todoEdit'
 import { filterUpdate, todoFilter, TodoFilterAction } from './todoFilter'
 import { TodoAction, todoList } from './todoList'
 import { view } from './view'
-import { Cancel, run, runFx } from '../../../src'
-import { renderLitHtml } from '../../../src/renderLitHtml'
+import { run } from '../../../packages/app'
+import { Cancel, runFx } from '../../../packages/core'
+import { renderLitHtml } from '../../../packages/render-lit-html'
 
 type TodoAppAction = TodoAction | TodoEditAction | TodoFilterAction
 

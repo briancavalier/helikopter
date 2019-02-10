@@ -1,7 +1,7 @@
 import { TodoEditAction, TodoEditState } from './todoEdit'
 import { filterTodos, TodoFilterState } from './todoFilter'
 import { countActive, TodoAction, TodoListState } from './todoList'
-import { action } from '../../../src'
+import { action } from '../../../packages/app'
 import { html, TemplateResult } from 'lit-html'
 
 const ENTER_KEY = 'Enter'

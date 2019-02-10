@@ -1,7 +1,5 @@
-import { Fiber, fork, Forked, select } from './fiber'
-import { Fx } from './fx'
-import { loop, Reactive } from './reactive'
-import { Render, render } from './render'
+import { render, Render } from './render'
+import { Fiber, fork, Forked, Fx, loop, Reactive, select } from '@helicopter/core'
 
 // Actions represent an intent to change state
 export type Action<K, A = void> = {

@@ -1,5 +1,6 @@
-import { Action, action, Cancel, fibers, Fibers, Fx, Handler, kill, PureHandler, run, runFx, withEffects } from '../../src'
-import { renderLitHtml } from '../../src/renderLitHtml'
+import { Action, action, Handler, PureHandler, run, withEffects } from '../../packages/app'
+import { Cancel, fibers, Fibers, Fx, kill, runFx } from '../../packages/core'
+import { renderLitHtml } from '../../packages/render-lit-html'
 import { html, TemplateResult } from 'lit-html'
 
 //-------------------------------------------------------

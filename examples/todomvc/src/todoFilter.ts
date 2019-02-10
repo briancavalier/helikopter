@@ -1,5 +1,6 @@
 import { Todo } from './todoList'
-import { Action, action, Cancel, Fx, Handler, map, withEffects, WithEffects } from '../../../src'
+import { Action, action, Handler, withEffects, WithEffects } from '../../../packages/app'
+import { Cancel, Fx, map } from '../../../packages/core'
 
 // -----------------------------------------------
 // A routing effect

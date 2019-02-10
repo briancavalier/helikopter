@@ -2,3 +2,5 @@ node_modules/
 .cache/
 dist/
 experiments/
+yarn-*.log
+lerna-*.log

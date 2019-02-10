@@ -1,0 +1,14 @@
+{
+  "name": "@helicopter/core",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "typings": "dist/index.d.ts",
+  "repository": "https://github.com/briancavalier/helicopter",
+  "author": "Brian Cavalier <brian@briancavalier.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc --noEmit"
+  }
+}

@@ -1,5 +1,4 @@
-import { Cancel } from './fx'
-import { Render } from './render'
+import { Cancel, Render } from '@helicopter/core'
 import { directive, EventPart, NodePart, Part, render as lrender, TemplateResult } from 'lit-html'
 
 export const renderLitHtml = <A> (root: Element): Render<TemplateResult, A> => {
