@@ -1,5 +1,6 @@
 import { render, Render } from './render'
 import { Fiber, fork, Forked, Fx, loop, Reactive, select } from '@helicopter/core'
+import { html } from 'lit-html'
 
 // Actions represent an intent to change state
 export type Action<K, A = void> = {
@@ -24,6 +25,21 @@ export type WithKey<K, V> = K extends string ? Readonly<Record<K, V>> : never
 // produces a new output sample and one or more output actions
 export type Handler<E, A, S> = U2I<Interpreters<E, A, A | void, S, S>>
 export type PureHandler<A, S> = Handler<never, A, S>
+
+export const dimap = <H extends Handler<any, any, any>, S, A extends StateOf<H>>(f: (s: S) => [A, S], g: (a: A, s: S) => S, h: H): Handler<EnvOf<H>, ActionsOf<H>, S> =>
+  Object.keys(h).reduce((hm, k) => {
+    (hm as any)[k] = (s: S, a: ActionsOf<H>, fs: ReadonlyArray<Forked>) => {
+      const [st, ss] = f(s)
+      const r = (h as any)[k](st, a, fs) as Update<EnvOf<H>, ActionsOf<H>, A>
+      return r instanceof WithEffects
+        ? new WithEffects(g(r.value, ss), r.effects)
+        : g(r, ss)
+    }
+    return hm
+  }, {} as Handler<EnvOf<H>, ActionsOf<H>, S>)
+
+export const prop = <H extends Handler<any, any, any>, K extends string, S extends Record<K, StateOf<H>>>(k: K, h: H): Handler<EnvOf<H>, ActionsOf<H>, S> =>
+  dimap(s => [s[k], s], (st, s) => ({ ...s, [k]: st }), h)
 
 export type Interpreters<E, A, B, S, T> = A extends Action<infer K, infer AV> ? WithKey<K, Interpreter<E, AV, B, S, T>> : never
 export type Interpreter<E, A, B, S, T> = (s: S, a: A, f: ReadonlyArray<Forked>) => Update<E, B, T>
@@ -75,12 +91,15 @@ const handleStep = <H>(h: H, state: StateOf<H>, fs: ReadonlyArray<Fiber<ActionsO
     // Currently, this only works if State is an object
     const update: UpdateOf<H> = interpret(h, s.state, f.state.value, fs)
     return update instanceof WithEffects
-      ? { state: { ...s.state, ...update.value }, effects: [...s.effects, ...update.effects] }
-      : { state: { ...s.state, ...update }, effects: s.effects }
+      ? { state: mergeState(s.state, update.value), effects: [...s.effects, ...update.effects] }
+      : { state: mergeState(s.state, update), effects: s.effects }
   }, { state, effects: [] as ReadonlyArray<Fx<EnvOf<H>, ActionsOf<H>>> })
 
   return { ...next, pending: fs.filter(f => f.state.status === 0) }
 }
 
-const interpret = <H extends Handler<any, any, any>>(i: H, s: StateOf<H>, a: ActionsOf<H>, f: ReadonlyArray<Forked>): UpdateOf<H> =>
-  (i as any)[a.name](s, a.value, f)
+const mergeState = <A> (a0: A, a1: Partial<A>): A =>
+  a0 != null && typeof a0 === 'object' ? { ...a0, ...a1 } : a1 as A
+
+const interpret = <H extends Handler<any, any, any>>(h: H, s: StateOf<H>, a: ActionsOf<H>, f: ReadonlyArray<Forked>): UpdateOf<H> =>
+  (h as any)[a.name](s, a.value, f)

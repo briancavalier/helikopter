@@ -1,26 +1,13 @@
-import { Action, action, Handler, PureHandler, run, withEffects } from '../../packages/app'
+import { Action, action, Handler, prop, run, withEffects } from '../../packages/app'
 import { Cancel, fibers, Fibers, Fx, kill, runFx } from '../../packages/core'
 import { renderLitHtml } from '../../packages/render-lit-html'
+import { counter, CounterAction } from '../counter/index'
 import { html, TemplateResult } from 'lit-html'
-
 //-------------------------------------------------------
-// First, let's make a simple, self-contained counter application
+// Notice that we're reusing the counter implementation
+// and actions from the simple counter example.  We can
+// use the prop lens to adapt it to work in this new app.
 
-// The counter can be incremented, decremented, or reset
-type CounterAction = Action<'inc'> | Action<'dec'> | Action<'reset'>
-
-// The counter's current state
-type Count = { count: number }
-
-// A handler for the counter actions.  It doesn't perform any
-// effects, so it's pure.
-const counter: PureHandler<CounterAction, Count> = {
-  inc: c => ({ count: c.count + 1 }),
-  dec: c => ({ count: c.count - 1 }),
-  reset: () => ({ count: 0 })
-}
-
-//-------------------------------------------------------
 // Next, we'll make a separate "delay counter" app, that
 // increments the counter after a delay.
 
@@ -44,7 +31,7 @@ type DelayCounterAction =
 
 // Reuse the counter state, but with a new field to track
 // pending delays.
-type DelayCount = Count & { delayed: number }
+type DelayCount = { count: number, delayed: number }
 
 // Handle the delay counter action.  This handler needs to
 // use 2 effects: Delay (which we just defined), and Fibers
@@ -76,8 +63,10 @@ const view = ({ count, delayed }: DelayCount): TemplateResult => html`
 
 //------------------------------------------------------
 // Compose the counter and delay counter by simply composing
-// their handlers
-const app = { ...counter, ...delayCounter }
+// their handlers.  The counter operates on type number, so
+// use can use the prop lens to focus it on the count field
+// of DelayCount
+const app = { ...prop('count', counter), ...delayCounter }
 
 // Run the app and view, starting with an initial state
 const appFx = run(app, view, { count: 0, delayed: 0 })
