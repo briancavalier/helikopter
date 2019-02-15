@@ -1,5 +1,5 @@
 import { action, Action, PureHandler, run } from '../../packages/app'
-import { runFx } from '../../packages/core'
+import { handle, runPure } from '../../packages/core'
 import { renderLitHtml } from '../../packages/render-lit-html'
 import { html, TemplateResult } from 'lit-html'
 
@@ -22,4 +22,4 @@ const view = (count: number): TemplateResult => html`
 
 const appFx = run(counter, view, 0)
 
-runFx(appFx, renderLitHtml<CounterAction>(document.body))
+runPure(handle(appFx, renderLitHtml<CounterAction>(document.body)))

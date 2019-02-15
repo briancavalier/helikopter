@@ -1,6 +1,5 @@
 import { render, Render } from './render'
-import { Fiber, fork, Forked, Fx, loop, Reactive, select } from '@helicopter/core'
-import { html } from 'lit-html'
+import { Fiber, fork, Forked, Fx, handle, loop, Reactive, select } from '@helicopter/core'
 
 // Actions represent an intent to change state
 export type Action<K, A = void> = {
@@ -78,8 +77,8 @@ export const run = <H extends Handler<any, any, any>, V>(i: H, v: (a: StateOf<H>
 // Create an App from a Handler and a view function
 export const createApp = <H extends Handler<any, any, any>, V>(h: H, v: (a: StateOf<H>) => V): Reactive<EnvOf<H> & Render<V, ActionsOf<H>>, StepOf<H>, StepOf<H>> =>
   ({ state, effects, pending }) => (env, k) => {
-    const rendering = fork(render<V, ActionsOf<H>>(v(state)), env)
-    const started = effects.map(fx => fork(fx, env))
+    const rendering = fork(handle(render<V, ActionsOf<H>>(v(state)), env))
+    const started = effects.map(fx => fork(handle(fx, env)))
     return select(fs => k(handleStep(h, state, fs)), ...pending, ...started, rendering)
   }
 

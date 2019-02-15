@@ -1,5 +1,5 @@
 import { Action, action, Handler, prop, run, withEffects } from '../../packages/app'
-import { Cancel, fibers, Fibers, Fx, kill, runFx } from '../../packages/core'
+import { Cancel, fibers, Fibers, Fx, handle, kill, runPure } from '../../packages/core'
 import { renderLitHtml } from '../../packages/render-lit-html'
 import { counter, CounterAction } from '../counter/index'
 import { html, TemplateResult } from 'lit-html'
@@ -75,11 +75,11 @@ const appFx = run(app, view, { count: 0, delayed: 0 })
 // Render (rendering the view is an effect!), and Fibers (for
 // canceling pending delays).  To perform the effects,
 // we need to supply their implementations.
-runFx(appFx, {
+runPure(handle(appFx, {
   ...fibers,
   ...renderLitHtml<CounterAction | DelayCounterAction>(document.body),
   delay: <A>(a: A, ms: number, k: (r: A) => void): Cancel => {
     const t = setTimeout(k, ms, a)
     return () => clearTimeout(t)
   }
-})
+}))

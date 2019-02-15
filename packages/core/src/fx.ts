@@ -6,8 +6,11 @@ export const runCancel = (c: Cancel, k: (r: void) => void): void =>
 export type Fx<H, A> = (handler: H, k: (a: A) => void) => Cancel
 export type Pure<A> = Fx<{}, A>
 
-export const runFx = <H, Handler extends H, A>(fx: Fx<H, A>, handler: Handler, k: (a: A) => void = () => {}): Cancel =>
-  fx(handler, k)
+export const handle = <H0, H1, A>(fx: Fx<H0 & H1, A>, h1: H1): Fx<H0, A> =>
+  (h0, k) => fx({ ...h0, ...h1 } as H0 & H1, k)
+
+export const runPure = <A>(fx: Fx<{}, A>, k: (a: A) => void = () => {}): Cancel =>
+  fx({}, k)
 
 export const pure = <A> (a: A): Pure<A> =>
   (_, k) => k(a)

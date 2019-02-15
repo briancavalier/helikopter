@@ -1,4 +1,4 @@
-import { Cancel, Fx, mapTo, runCancel, runFx } from './fx'
+import { Cancel, Fx, mapTo, runCancel, runPure } from './fx'
 
 export type Handle<A> = (a: A) => void
 export type Unhandle = () => void
@@ -46,9 +46,9 @@ export const fibers = {
 
 export type Fibers = typeof fibers
 
-export const fork = <H, A> (fx: Fx<H, A>, h: H): Fiber<A> => {
+export const fork = <A> (fx: Fx<{}, A>): Fiber<A> => {
   const fiber = createFiber<A>(k => runCancel(cancel, k))
-  const cancel: Cancel = runFx(fx, h,a => complete(a, fiber))
+  const cancel: Cancel = runPure(fx, a => complete(a, fiber))
   return fiber
 }
 
