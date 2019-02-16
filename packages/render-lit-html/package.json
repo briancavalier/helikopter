@@ -12,7 +12,11 @@
     "test": "tsc --noEmit"
   },
   "dependencies": {
+    "@helicopter/app": "^0.0.0",
     "@helicopter/core": "^0.0.0",
     "lit-html": "^1.0.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

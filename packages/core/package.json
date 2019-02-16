@@ -10,5 +10,8 @@
   "scripts": {
     "build": "tsc",
     "test": "tsc --noEmit"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

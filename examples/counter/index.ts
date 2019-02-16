@@ -1,6 +1,5 @@
-import { action, Action, PureHandler, run } from '../../packages/app'
-import { handle, runPure } from '../../packages/core'
-import { renderLitHtml } from '../../packages/render-lit-html'
+import { action, Action, createApp, PureHandler, runApp } from '../../packages/app/src'
+import { renderLitHtml } from '../../packages/render-lit-html/src'
 import { html, TemplateResult } from 'lit-html'
 
 export type CounterAction = Action<'inc'> | Action<'dec'> | Action<'reset'>
@@ -20,6 +19,6 @@ const view = (count: number): TemplateResult => html`
   </p>
 `
 
-const appFx = run(counter, view, 0)
+const appFx = createApp(counter, view, 0)
 
-runPure(handle(appFx, renderLitHtml<CounterAction>(document.body)))
+runApp(appFx, renderLitHtml<CounterAction>(document.body))
