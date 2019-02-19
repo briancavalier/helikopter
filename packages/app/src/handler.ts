@@ -33,11 +33,11 @@ export type Interpreter<E, A, B, S, T> = (s: S, a: A, f: ReadonlyArray<Forked>) 
 export type Update<E, A, S> = S | WithEffects<S, ReadonlyArray<Fx<E, A>>>
 
 export class WithEffects<A, E> {
-  constructor(public readonly value: A, public readonly effects: E) { }
+  constructor(public readonly value: A, public readonly effects: E) {}
 }
 
-export const withEffects = <A, E>(value: A, effects: E): WithEffects<A, E> =>
-  new WithEffects(value, effects)
+export const withEffects = <A, E>(value: A, effects: E): WithEffects<A, E> => new WithEffects(value, effects)
+export const withEffect = <A, E>(value: A, effect: E): WithEffects<A, ReadonlyArray<E>> => new WithEffects(value, [effect])
 
 export type Step<E, A, S> = {
   readonly state: S,

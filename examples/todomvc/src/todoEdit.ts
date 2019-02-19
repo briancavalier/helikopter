@@ -1,5 +1,5 @@
 import { Todo, TodoListState } from './todoList'
-import { Action, PureHandler } from '../../../packages/app'
+import { Action, PureHandler } from '../../../packages/app/src'
 
 export type TodoEditState = TodoListState & { readonly editing: Todo | null }
 

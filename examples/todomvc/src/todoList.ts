@@ -1,4 +1,4 @@
-import { Action, PureHandler } from '../../../packages/app'
+import { Action, PureHandler } from '../../../packages/app/src'
 
 export type Todo = { readonly description: string, readonly completed: boolean }
 

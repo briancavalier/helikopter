@@ -1,6 +1,6 @@
 import { Todo } from './todoList'
-import { Action, action, Handler, withEffects, WithEffects } from '../../../packages/app'
-import { Cancel, Fx, map } from '../../../packages/core'
+import { Action, action, Handler, withEffect, WithEffects } from '../../../packages/app/src'
+import { Cancel, Fx, map } from '../../../packages/core/src'
 
 // -----------------------------------------------
 // A routing effect
@@ -19,8 +19,8 @@ export type TodoFilterState = { readonly filter: Filter | null }
 export type TodoFilterAction = Action<'filter', Filter | null>
 
 export const todoFilter: Handler<Route, TodoFilterAction, TodoFilterState> = {
-	filter: (_: TodoFilterState, filter: Filter | null): WithEffects<TodoFilterState, Fx<Route, TodoFilterAction>[]> =>
-		withEffects({ filter }, [filterUpdate])
+	filter: (_: TodoFilterState, filter: Filter | null): WithEffects<TodoFilterState, ReadonlyArray<Fx<Route, TodoFilterAction>>> =>
+		withEffect({ filter }, filterUpdate)
 }
 
 export const filterUpdate: Fx<Route, TodoFilterAction> =
