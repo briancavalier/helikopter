@@ -13,20 +13,16 @@ export type WithKey<K, V> = K extends string ? Readonly<Record<K, V>> : never
 export type Handler<E, A, S> = U2I<Interpreters<E, A, A | void, S, S>>
 export type PureHandler<A, S> = Handler<never, A, S>
 
-export const dimap = <H extends Handler<any, any, any>, S, A extends StateOf<H>>(f: (s: S) => [A, S], g: (a: A, s: S) => S, h: H): Handler<EnvOf<H>, ActionsOf<H>, S> =>
+export const prop = <H extends Handler<any, any, any>, N extends string, S extends Record<N, UnionStateOf<H>>>(n: N, h: H): Handler<EnvOf<H>, ActionsOf<H>, S> =>
   Object.keys(h).reduce((hm, k) => {
     (hm as any)[k] = (s: S, a: ActionsOf<H>, fs: ReadonlyArray<Forked>) => {
-      const [st, ss] = f(s)
-      const r = (h as any)[k](st, a, fs) as Update<EnvOf<H>, ActionsOf<H>, A>
+      const r = (h as any)[k](s[n], a, fs) as Update<EnvOf<H>, ActionsOf<H>, UnionStateOf<H>>
       return r instanceof WithEffects
-        ? new WithEffects(g(r.value, ss), r.effects)
-        : g(r, ss)
+        ? new WithEffects({ ...s, [n]: r.value }, r.effects)
+        : { ...s, [n]: r }
     }
     return hm
   }, {} as Handler<EnvOf<H>, ActionsOf<H>, S>)
-
-export const prop = <H extends Handler<any, any, any>, K extends string, S extends Record<K, StateOf<H>>>(k: K, h: H): Handler<EnvOf<H>, ActionsOf<H>, S> =>
-  dimap(s => [s[k], s], (st, s) => ({ ...s, [k]: st }), h)
 
 export type Interpreters<E, A, B, S, T> = A extends Action<infer K, infer AV> ? WithKey<K, Interpreter<E, AV, B, S, T>> : never
 export type Interpreter<E, A, B, S, T> = (s: S, a: A, f: ReadonlyArray<Forked>) => Update<E, B, T>
@@ -49,9 +45,10 @@ export type Step<E, A, S> = {
 export type EnvOf<H> = U2I<{
   readonly [K in keyof H]: H[K] extends Interpreter<infer E, any, any, any, any> ? E : 'EnvOf inferred never'
 }[keyof H]>
-export type StateOf<H> = U2I<{
+export type UnionStateOf<H> = {
   readonly [K in keyof H]: H[K] extends (s: infer S, ...rest: any[]) => any ? S : never
-}[keyof H]>
+}[keyof H]
+export type StateOf<H> = U2I<UnionStateOf<H>>
 export type ActionsOf<H> = {
   readonly [K in keyof H]: H[K] extends Interpreter<any, infer A, any, any, any> ? Action<K, A> : never
 }[keyof H]

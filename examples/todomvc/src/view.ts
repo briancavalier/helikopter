@@ -1,8 +1,10 @@
 import { TodoEditAction, TodoEditState } from './todoEdit'
-import { filterTodos, TodoFilterState } from './todoFilter'
-import { countActive, TodoAction, TodoListState } from './todoList'
+import { Filter, filterTodos } from './todoFilter'
+import { countActive, Todo, TodoAction } from './todoList'
 import { action } from '../../../packages/app/src'
 import { html, TemplateResult } from 'lit-html'
+
+type ViewState = { todos: ReadonlyArray<Todo>, editing: Todo | null, filter: Filter }
 
 const ENTER_KEY = 'Enter'
 const ESC_KEY = 'Escape'
@@ -25,7 +27,7 @@ const handleSaveEdit = (e: any): TodoEditAction =>
 
 const showIf = (condition: boolean): string => condition ? '' : 'display: none'
 
-export const view = ({ todos, editing, filter }: TodoListState & TodoEditState & TodoFilterState): TemplateResult => {
+export const view = ({ todos, editing, filter }: ViewState): TemplateResult => {
 	const active = countActive(todos)
 	const showList = showIf(todos.length > 0)
 	const showClear = showIf(todos.length > active)

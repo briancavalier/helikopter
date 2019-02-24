@@ -4,8 +4,6 @@ export type Todo = { readonly description: string, readonly completed: boolean }
 
 export type TodoUpdate = { readonly todo: Todo, readonly completed: boolean }
 
-export type TodoListState = { readonly todos: ReadonlyArray<Todo> }
-
 export type TodoAction =
 	| Action<'add', string>
 	| Action<'remove', Todo>
@@ -13,21 +11,21 @@ export type TodoAction =
 	| Action<'removeCompleted'>
 	| Action<'updateAll', boolean>
 
-export const todoList: PureHandler<TodoAction, TodoListState> = {
-	add: ({ todos }: TodoListState, description: string): TodoListState =>
-		({ todos: [...todos, { description, completed: false }] }),
+export const todoList: PureHandler<TodoAction, ReadonlyArray<Todo>> = {
+	add: (todos: ReadonlyArray<Todo>, description: string): ReadonlyArray<Todo> =>
+		[...todos, { description, completed: false }],
 
-	remove: ({ todos }: TodoListState, todo: Todo): TodoListState =>
-		({ todos: todos.filter(t => t !== todo) }),
+	remove: (todos: ReadonlyArray<Todo>, todo: Todo): ReadonlyArray<Todo> =>
+		todos.filter(t => t !== todo),
 
-	update: ({ todos }: TodoListState, { todo, completed }: TodoUpdate): TodoListState =>
-		({ todos: todos.map(t => t === todo ? { ...t, completed } : t) }),
+	update: (todos: ReadonlyArray<Todo>, { todo, completed }: TodoUpdate): ReadonlyArray<Todo> =>
+		todos.map(t => t === todo ? { ...t, completed } : t),
 
-	removeCompleted: ({ todos }: TodoListState): TodoListState =>
-		({ todos: todos.filter(todo => !todo.completed) }),
+	removeCompleted: (todos: ReadonlyArray<Todo>): ReadonlyArray<Todo> =>
+		todos.filter(todo => !todo.completed),
 
-	updateAll: ({ todos }: TodoListState, completed: boolean): TodoListState =>
-		({ todos: todos.map(todo => ({ ...todo, completed })) })
+	updateAll: (todos: ReadonlyArray<Todo>, completed: boolean): ReadonlyArray<Todo> =>
+		todos.map(todo => ({ ...todo, completed }))
 }
 
 export const countActive = (todos: ReadonlyArray<Todo>): number =>

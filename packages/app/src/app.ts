@@ -4,13 +4,15 @@ import { Cancel, Fiber, fork, Fx, handle, loop, Reactive, runPure, select } from
 
 export type App<E> = Fx<E, never>
 
+// Run an App in the provided environment
 export const runApp = <E> (app: App<E>, env: E): Cancel =>
   runPure(handle(app, env))
 
+// Create an App from a Handler and a view function, an initial state, and initial effects to run
 export const createApp = <H extends Handler<any, any, any>, V, A extends ActionsOf<H>>(i: H, v: (a: StateOf<H>) => V, a: StateOf<H>, e: ReadonlyArray<Fx<EnvOf<H>, A>> = []): App<EnvOf<H> & Render<V, ActionsOf<H>>> =>
   loop(createReactive(i, v))({ state: a, effects: e, pending: [] })
 
-// Create an App from a Handler and a view function
+// Create a Reactive from a Handler and a view function
 const createReactive = <H extends Handler<any, any, any>, V>(h: H, v: (a: StateOf<H>) => V): Reactive<EnvOf<H> & Render<V, ActionsOf<H>>, StepOf<H>, StepOf<H>> =>
   ({ state, effects, pending }) => (env, k) => {
     const rendering = fork(handle(render<V, ActionsOf<H>>(v(state)), env))

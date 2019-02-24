@@ -2,13 +2,17 @@ import { todoEdit, TodoEditAction } from './todoEdit'
 import { filterUpdate, todoFilter, TodoFilterAction } from './todoFilter'
 import { TodoAction, todoList } from './todoList'
 import { view } from './view'
-import { createApp, runApp } from '../../../packages/app/src'
+import { createApp, prop, runApp, StateOf, UnionStateOf } from '../../../packages/app/src'
 import { Cancel } from '../../../packages/core/src'
 import { renderLitHtml } from '../../../packages/render-lit-html/src'
 
 type TodoAppAction = TodoAction | TodoEditAction | TodoFilterAction
 
-const todoApp = { ...todoList, ...todoEdit, ...todoFilter }
+const todoApp = {
+	...prop('todos', todoList),
+	...todoEdit,
+	...prop('filter', todoFilter)
+}
 
 const initialState = { todos: [], editing: null, filter: null }
 

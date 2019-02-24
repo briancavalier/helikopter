@@ -12,24 +12,23 @@ export const route: Fx<Route, string> = ({ route }, k) => route(k)
 
 // -----------------------------------------------
 // Todo filters
-export type Filter = '/active' | '/completed'
 
-export type TodoFilterState = { readonly filter: Filter | null }
+export type Filter = '/active' | '/completed' | null
 
-export type TodoFilterAction = Action<'filter', Filter | null>
+export type TodoFilterAction = Action<'filter', Filter>
 
-export const todoFilter: Handler<Route, TodoFilterAction, TodoFilterState> = {
-	filter: (_: TodoFilterState, filter: Filter | null): WithEffects<TodoFilterState, ReadonlyArray<Fx<Route, TodoFilterAction>>> =>
-		withEffect({ filter }, filterUpdate)
+export const todoFilter: Handler<Route, TodoFilterAction, Filter> = {
+	filter: (_: Filter, filter: Filter): WithEffects<Filter, ReadonlyArray<Fx<Route, TodoFilterAction>>> =>
+		withEffect(filter, filterUpdate)
 }
 
 export const filterUpdate: Fx<Route, TodoFilterAction> =
 	map(s => action('filter', parseFilter(s)), route)
 
-export const parseFilter = (s: string): Filter | null =>
+export const parseFilter = (s: string): Filter =>
 	s === '/active' || s === '/completed' ? s : null
 
-export const filterTodos = (filter: Filter | null, todos: ReadonlyArray<Todo>): ReadonlyArray<Todo> =>
+export const filterTodos = (filter: Filter, todos: ReadonlyArray<Todo>): ReadonlyArray<Todo> =>
 	filter === '/completed' ? todos.filter(t => t.completed)
 		: filter === '/active' ? todos.filter(t => !t.completed)
 			: todos
