@@ -37,8 +37,6 @@ export type EnvOf<H> = U2I<{
   readonly [K in keyof H]: H[K] extends Interpreter<infer E, any, any, any, any> ? E : never
 }[keyof H]>
 
-type T= EnvOf<'hello'>
-
 export type UnionStateOf<H> = {
   readonly [K in keyof H]: H[K] extends (s: infer S, ...rest: any[]) => any ? S : never
 }[keyof H]
