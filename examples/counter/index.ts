@@ -5,8 +5,8 @@ import { html, TemplateResult } from 'lit-html'
 export type CounterAction = Action<'inc'> | Action<'dec'> | Action<'reset'>
 
 export const counter: PureHandler<CounterAction, number> = {
-  inc: c => c + 1,
-  dec: c => c - 1,
+  inc: count => count + 1,
+  dec: count => count - 1,
   reset: () => 0
 }
 
