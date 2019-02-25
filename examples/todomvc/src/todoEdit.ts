@@ -1,7 +1,7 @@
 import { Todo } from './todoList'
 import { Action, PureHandler } from '../../../packages/app/src'
 
-export type TodoEditState = { todos: ReadonlyArray<Todo>,  readonly editing: Todo | null }
+export type TodoEditState = { readonly todos: ReadonlyArray<Todo>,  readonly editing: Todo | null }
 
 export type TodoEditAction =
 	| Action<'beginEdit', Todo>
