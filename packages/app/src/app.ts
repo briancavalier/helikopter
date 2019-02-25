@@ -9,12 +9,12 @@ export const runApp = <E> (app: App<E>, env: E): Cancel =>
   runPure(handle(app, env))
 
 // Create an App from a Handler and a view function, an initial state, and initial effects to run
-export const createApp = <H extends Handler<any, any, any>, V, A extends ActionsOf<H>>(i: H, v: (a: StateOf<H>) => V, a: StateOf<H>, e: ReadonlyArray<Fx<EnvOf<H>, A>> = []): App<EnvOf<H> & Render<V, ActionsOf<H>>> =>
-  loop(createReactive(i, v))({ state: a, effects: e, pending: [] })
+export const createApp = <H extends Handler<any, any, any>, V, A extends ActionsOf<H>>(i: H, v: (a: StateOf<H>) => V, state: StateOf<H>, effects: ReadonlyArray<Fx<EnvOf<H>, A>> = []): App<EnvOf<H> & Render<V, ActionsOf<H>>> =>
+  loop(createReactive(i, v))({ state, effects, active: [] })
 
 // Create a Reactive from a Handler and a view function
 const createReactive = <H extends Handler<any, any, any>, V>(h: H, v: (a: StateOf<H>) => V): Reactive<EnvOf<H> & Render<V, ActionsOf<H>>, StepOf<H>, StepOf<H>> =>
-  ({ state, effects, pending }) => (env, k) => {
+  ({ state, effects, active: pending }) => (env, k) => {
     const rendering = fork(handle(render<V, ActionsOf<H>>(v(state)), env))
     const started = effects.map(fx => fork(handle(fx, env)))
     return select(fs => k(handleStep(h, state, fs)), ...pending, ...started, rendering)
@@ -32,7 +32,7 @@ const handleStep = <H>(h: H, state: StateOf<H>, fs: ReadonlyArray<Fiber<ActionsO
       : { state: mergeState(s.state, update), effects: s.effects }
   }, { state, effects: [] as ReadonlyArray<Fx<EnvOf<H>, ActionsOf<H>>> })
 
-  return { ...next, pending: fs.filter(f => f.state.status === 0) }
+  return { ...next, active: fs.filter(f => f.state.status === 0) }
 }
 
 const mergeState = <A>(a0: A, a1: Partial<A>): A =>
