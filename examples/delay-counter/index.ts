@@ -1,4 +1,4 @@
-import { Action, action, createApp, Handler, prop, runApp, withEffects } from '../../packages/app/src'
+import { Action, action, createApp, Handler, prop, runApp, withEffect, withEffects } from '../../packages/app/src'
 import { Cancel, fibers, Fibers, Fx, kill } from '../../packages/core/src'
 import { renderLitHtml } from '../../packages/render-lit-html/src'
 import { counter, CounterAction } from '../counter/index'
@@ -38,7 +38,7 @@ type DelayCount = { count: number, delayed: number }
 // which we can use to kill (cancel) pending delay effects.
 const delayCounter: Handler<Delay & Fibers, DelayCounterAction, DelayCount> = {
   delay: (c, ms) =>
-    withEffects({ ...c, delayed: c.delayed + 1 }, [delay(action('incDelay'), ms)]),
+    withEffect({ ...c, delayed: c.delayed + 1 }, delay(action('incDelay'), ms)),
   incDelay: c =>
     ({ count: c.count + 1, delayed: c.delayed - 1 }),
   cancelDelays: (c, _, delays) =>

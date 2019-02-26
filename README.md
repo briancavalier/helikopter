@@ -1,3 +1,3 @@
 # :helicopter: Helicopter
 
-Circular reactive programming with algebraic effects
+Helicopter is an architecture for interactive web applications.  It adds algebraic effects and composable handlers to an Elm-like reactive architecture.
