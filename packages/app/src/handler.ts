@@ -1,18 +1,12 @@
-import { Action } from './action'
+import { Action, ActionKeys, ActionValue } from './action'
 import { Fiber, Forked, Fx } from '@helicopter/core'
 
-// Helper to turn a union into an intersection
-type U2I<U> = (U extends any ? (u: U) => void : never) extends ((i: infer I) => void) ? I : never
+export type Handler<E, A, S> = {
+  [K in ActionKeys<A>]: Interpreter<E, ActionValue<K, A>, A | void, S, S>
+}
 
-// Readonly key-value pair
-export type WithKey<K, V> = K extends string ? Readonly<Record<K, V>> : never
-
-// A Handler is a family of functions which, given an input action A and input sample S,
-// produces a new output sample and one or more output actions
-export type Handler<E, A, S> = U2I<Interpreters<E, A, A | void, S, S>>
 export type PureHandler<A, S> = Handler<never, A, S>
 
-export type Interpreters<E, A, B, S, T> = A extends Action<infer K, infer AV> ? WithKey<K, Interpreter<E, AV, B, S, T>> : never
 export type Interpreter<E, A, B, S, T> = (s: S, a: A, f: ReadonlyArray<Forked>) => Update<E, B, T>
 export type Update<E, A, S> = S | WithEffects<S, ReadonlyArray<Fx<E, A>>>
 
@@ -31,6 +25,9 @@ export type Step<E, A, S> = {
   readonly effects: ReadonlyArray<Fx<E, A>>,
   readonly active: ReadonlyArray<Fiber<A>>
 }
+
+// Helper to turn a union into an intersection
+type U2I<U> = (U extends any ? (u: U) => void : never) extends ((i: infer I) => void) ? I : never
 
 // Types that recover the environment, state, and actions of a Handler
 export type EnvOf<H> = U2I<{
