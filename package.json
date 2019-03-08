@@ -1,14 +1,15 @@
 {
-  "name": "helicopter",
+  "name": "helikopter",
   "version": "0.0.0",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
-  "description": "",
+  "description": "Reactive programming with effects",
   "scripts": {
-    "start-todomvc": "parcel examples/todomvc/index.html",
+    "start-counter": "parcel examples/counter/index.html",
     "start-delay-counter": "parcel examples/delay-counter/index.html",
+    "start-todomvc": "parcel examples/todomvc/index.html",
     "start": "yarn start-todomvc",
     "test": "lerna run test --stream",
     "build": "lerna run build --stream"

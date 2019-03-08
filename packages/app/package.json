@@ -1,10 +1,9 @@
 {
-  "name": "@helicopter/app",
+  "name": "@helikopter/app",
   "version": "0.0.0",
-  "main": "dist/index.js",
   "module": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "repository": "https://github.com/briancavalier/helicopter",
+  "types": "dist/index.d.ts",
+  "repository": "https://github.com/briancavalier/helikopter",
   "author": "Brian Cavalier <brian@briancavalier.com>",
   "license": "MIT",
   "scripts": {
@@ -13,7 +12,7 @@
     "test": "tsc --noEmit"
   },
   "dependencies": {
-    "@helicopter/core": "^0.0.0"
+    "@helikopter/core": "^0.0.0"
   },
   "files": [
     "dist"

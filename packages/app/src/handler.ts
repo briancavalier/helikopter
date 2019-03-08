@@ -1,5 +1,5 @@
 import { Action, ActionKeys, ActionValue } from './action'
-import { Fiber, Forked, Fx } from '@helicopter/core'
+import { Fiber, Forked, Fx } from '@helikopter/core'
 
 export type Handler<E, A, S> = {
   [K in ActionKeys<A>]: Interpreter<E, ActionValue<K, A>, A | void, S, S>

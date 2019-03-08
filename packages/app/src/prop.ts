@@ -1,5 +1,5 @@
 import { ActionsOf, EnvOf, Handler, UnionStateOf, Update, WithEffects } from './handler'
-import { Forked } from '@helicopter/core'
+import { Forked } from '@helikopter/core'
 
 export const prop = <H extends Handler<any, any, any>, K extends string, S extends Record<K, UnionStateOf<H>>>(k: K, h: H): Handler<EnvOf<H>, ActionsOf<H>, S> =>
   Object.keys(h).reduce((hm, hk) => {

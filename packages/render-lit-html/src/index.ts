@@ -1,5 +1,5 @@
-import { Render } from '@helicopter/app'
-import { Cancel } from '@helicopter/core'
+import { Render } from '@helikopter/app'
+import { Cancel } from '@helikopter/core'
 import { directive, EventPart, NodePart, Part, render as lrender, TemplateResult } from 'lit-html'
 
 export const renderLitHtml = <A> (root: Element): Render<TemplateResult, A> => {
@@ -19,7 +19,7 @@ const cancelAF = (af?: number): void => {
 }
 
 const wrapHandlers = <A>(k: (a: A) => void, t: TemplateResult): TemplateResult =>
-  new TemplateResult(t.strings, t.values.map(x => intent(k, x)), t.type, t.processor)
+  new TemplateResult(t.strings, t.values.map((x: any) => intent(k, x)), t.type, t.processor)
 
 const intent = directive((k: (a: any) => void, x: any) => (part: Part) =>
   part.setValue(

@@ -1,4 +1,4 @@
-import { Cancel, Fx } from '@helicopter/core'
+import { Cancel, Fx } from '@helikopter/core'
 
 export type Render<V, A> = {
   render: (v: V, k: (a: A) => void) => Cancel

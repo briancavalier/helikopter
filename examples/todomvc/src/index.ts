@@ -2,7 +2,7 @@ import { todoEdit, TodoEditAction } from './todoEdit'
 import { filterUpdate, todoFilter, TodoFilterAction } from './todoFilter'
 import { TodoAction, todoList } from './todoList'
 import { view } from './view'
-import { createApp, prop, runApp, StateOf, UnionStateOf } from '../../../packages/app/src'
+import { createApp, prop, runApp } from '../../../packages/app/src'
 import { Cancel } from '../../../packages/core/src'
 import { renderLitHtml } from '../../../packages/render-lit-html/src'
 
