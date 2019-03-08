@@ -1,6 +1,6 @@
 {
   "name": "@helikopter/app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/briancavalier/helikopter",
@@ -12,7 +12,7 @@
     "test": "tsc --noEmit"
   },
   "dependencies": {
-    "@helikopter/core": "^0.0.0"
+    "@helikopter/core": "^0.1.0"
   },
   "files": [
     "dist"
