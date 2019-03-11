@@ -1,5 +1,5 @@
-import { action, Action, createApp, PureHandler, runApp } from '../../packages/app/src'
-import { renderLitHtml } from '../../packages/render-lit-html/src'
+import { action, Action, createApp, PureHandler, runApp } from '@helikopter/app'
+import { renderLitHtml } from '@helikopter/render-lit-html'
 import { html, TemplateResult } from 'lit-html'
 
 export type CounterAction = Action<'inc'> | Action<'dec'> | Action<'reset'>

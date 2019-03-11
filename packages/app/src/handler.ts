@@ -2,7 +2,7 @@ import { Action, ActionKeys, ActionValue } from './action'
 import { Fiber, Forked, Fx } from '@helikopter/core'
 
 export type Handler<E, A, S> = {
-  [K in ActionKeys<A>]: Interpreter<E, ActionValue<K, A>, A | void, S, S>
+  [K in ActionKeys<A>]: (s: S, a: ActionValue<K, A>, f: ReadonlyArray<Forked>) => Update<E, A | void, S>
 }
 
 export type PureHandler<A, S> = Handler<never, A, S>

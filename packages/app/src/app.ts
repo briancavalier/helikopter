@@ -1,4 +1,4 @@
-import { ActionsOf, EnvOf, Handler, interpret, StateOf, StepOf, UpdateOf, WithEffects } from './handler'
+import { ActionsOf, EnvOf, interpret, StateOf, StepOf, UpdateOf, WithEffects } from './handler'
 import { Render, render } from './render'
 import { Cancel, Fiber, fork, Fx, handle, loop, Reactive, runPure, select } from '@helikopter/core'
 
