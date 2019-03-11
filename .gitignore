@@ -4,3 +4,4 @@ dist/
 experiments/
 yarn-*.log
 lerna-*.log
+.rts2_cache_*/

@@ -1,20 +1,22 @@
 {
   "name": "@helikopter/core",
   "version": "0.1.0",
-  "module": "dist/index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.m.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/briancavalier/helikopter",
   "author": "Brian Cavalier <brian@briancavalier.com>",
   "license": "MIT",
   "scripts": {
-    "prepare": "tsc",
-    "build": "tsc",
+    "prepare": "yarn build",
+    "build": "microbundle -f es,cjs",
     "test": "tsc --noEmit"
   },
   "files": [
     "dist"
   ],
   "devDependencies": {
+    "microbundle": "^0.11.0",
     "typescript": "^3.3.3333"
   }
 }
