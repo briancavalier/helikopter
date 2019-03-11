@@ -16,7 +16,7 @@
     "dist"
   ],
   "devDependencies": {
-    "microbundle": "^0.11.0",
-    "typescript": "^3.3.3333"
+    "microbundle": "0.11.0",
+    "typescript": "3.3.3333"
   }
 }
