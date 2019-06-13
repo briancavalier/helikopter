@@ -2,9 +2,9 @@ import { todoEdit, TodoEditAction } from './todoEdit'
 import { filterUpdate, todoFilter, TodoFilterAction } from './todoFilter'
 import { TodoAction, todoList } from './todoList'
 import { view } from './view'
-import { createApp, prop, runApp } from '../../../packages/app/src'
-import { Cancel } from '../../../packages/core/src'
-import { renderLitHtml } from '../../../packages/render-lit-html/src'
+import { createApp, prop, runApp } from '../../../packages/app'
+import { Cancel } from '../../../packages/core'
+import { renderLitHtml } from '../../../packages/render-lit-html'
 
 type TodoAppAction = TodoAction | TodoEditAction | TodoFilterAction
 
@@ -16,7 +16,7 @@ const todoApp = {
 
 const initialState = { todos: [], editing: null, filter: null }
 
-const appFx = createApp(todoApp, view, initialState, [filterUpdate])
+const appFx = createApp(todoApp, view, initialState, filterUpdate)
 
 runApp(appFx, {
 	...renderLitHtml<TodoAppAction>(document.body),

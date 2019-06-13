@@ -1,5 +1,5 @@
 import { Todo } from './todoList'
-import { Action, action, Handler, withEffect, WithEffects } from '../../../packages/app/src'
+import { Action, action, Handler, withEffects, WithEffects } from '../../../packages/app/src'
 import { Cancel, Fx, map } from '../../../packages/core/src'
 
 // -----------------------------------------------
@@ -19,7 +19,7 @@ export type TodoFilterAction = Action<'filter', Filter>
 
 export const todoFilter: Handler<Route, TodoFilterAction, Filter> = {
 	filter: (_: Filter, filter: Filter): WithEffects<Filter, ReadonlyArray<Fx<Route, TodoFilterAction>>> =>
-		withEffect(filter, filterUpdate)
+		withEffects(filter, filterUpdate)
 }
 
 export const filterUpdate: Fx<Route, TodoFilterAction> =

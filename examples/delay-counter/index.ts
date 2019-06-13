@@ -1,6 +1,6 @@
-import { Action, action, createApp, Handler, prop, runApp, withEffect, withEffects } from '../../packages/app/src'
-import { Cancel, fibers, Fibers, Fx, kill } from '../../packages/core/src'
-import { renderLitHtml } from '../../packages/render-lit-html/src'
+import { Action, action, createApp, runApp, withEffects, prop } from '../../packages/app'
+import { Cancel, fibers, Forked, Fx, kill } from '../../packages/core'
+import { renderLitHtml } from '../../packages/render-lit-html'
 import { counter, CounterAction } from '../counter/index'
 import { html, TemplateResult } from 'lit-html'
 //-------------------------------------------------------
@@ -36,13 +36,13 @@ type DelayCount = { count: number, delayed: number }
 // Handle the delay counter action.  This handler needs to
 // use 2 effects: Delay (which we just defined), and Fibers
 // which we can use to kill (cancel) pending delay effects.
-const delayCounter: Handler<Delay & Fibers, DelayCounterAction, DelayCount> = {
-  delay: (c, ms) =>
-    withEffect({ ...c, delayed: c.delayed + 1 }, delay(action('incDelay'), ms)),
-  incDelay: c =>
+const delayCounter = {
+  delay: (c: DelayCount, ms: number) =>
+    withEffects({ ...c, delayed: c.delayed + 1 }, delay(action('incDelay'), ms)),
+  incDelay: (c: DelayCount) =>
     ({ count: c.count + 1, delayed: c.delayed - 1 }),
-  cancelDelays: (c, _, delays) =>
-    withEffects({ ...c, delayed: 0 }, delays.map(kill))
+  cancelDelays: (c: DelayCount, _: unknown, delays: readonly Forked[]) =>
+    withEffects({ ...c, delayed: 0 }, ...delays.map(kill))
 }
 
 //-------------------------------------------------------

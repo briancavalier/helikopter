@@ -1,4 +1,4 @@
-import { ActionsOf, EnvOf, interpret, StateOf, StepOf, UpdateOf, WithEffects } from './handler'
+import { ActionsOf, EnvOf, interpret, StateOf, StepOf, UpdateOf, WithEffects, MapEnv } from './handler'
 import { Render, render } from './render'
 import { Cancel, Fiber, fork, Fx, handle, loop, Reactive, runPure, select } from '@helikopter/core'
 
@@ -9,8 +9,11 @@ export const runApp = <E> (app: App<E>, env: E): Cancel =>
   runPure(handle(app, env))
 
 // Create an App from a Handler and a view function, an initial state, and initial effects to run
-export const createApp = <H, V, A extends ActionsOf<H>>(handler: H, view: (a: StateOf<H>) => V, state: StateOf<H>, effects: ReadonlyArray<Fx<EnvOf<H>, A>> = []): App<EnvOf<H> & Render<V, ActionsOf<H>>> =>
-  loop(createReactive(handler, view))({ state, effects, active: [] })
+export function createApp <H, V>(handler: H, view: (a: StateOf<H>) => V, state: StateOf<H>): App<EnvOf<H> & Render<V, ActionsOf<H>>>
+export function createApp <H, V, E extends any[]>(handler: H, view: (a: StateOf<H>) => V, state: StateOf<H>, ...effects: E): App<EnvOf<H> & MapEnv<E> & Render<V, ActionsOf<H>>>
+export function createApp <H, V, E extends any[]>(handler: H, view: (a: StateOf<H>) => V, state: StateOf<H>, ...effects: E): App<any> {
+  return loop(createReactive(handler, view))({ state, effects, active: [] })
+}
 
 // Create a Reactive from a Handler and a view function
 const createReactive = <H, V>(h: H, v: (a: StateOf<H>) => V): Reactive<EnvOf<H> & Render<V, ActionsOf<H>>, StepOf<H>, StepOf<H>> =>

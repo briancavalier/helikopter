@@ -14,11 +14,8 @@ export class WithEffects<A, E> {
   constructor(public readonly value: A, public readonly effects: E) {}
 }
 
-export const withEffects = <A, E>(value: A, effects: E): WithEffects<A, E> =>
+export const withEffects = <A, E extends Fx<any, any>[]>(value: A, ...effects: E): WithEffects<A, E> =>
   new WithEffects(value, effects)
-
-export const withEffect = <A, E>(value: A, effect: E): WithEffects<A, ReadonlyArray<E>> =>
-  new WithEffects(value, [effect])
 
 export type Step<E, A, S> = {
   readonly state: S,
@@ -31,8 +28,11 @@ type U2I<U> = (U extends any ? (u: U) => void : never) extends ((i: infer I) => 
 
 // Types that recover the environment, state, and actions of a Handler
 export type EnvOf<H> = U2I<{
-  readonly [K in keyof H]: H[K] extends Interpreter<infer E, any, any, any, any> ? E : never
+  readonly [K in keyof H]: H[K] extends (...args: any[]) => WithEffects<any, infer E> ? MapEnv<E> : never
 }[keyof H]>
+
+export type MapEnv<E> = E extends Array<Fx<any, any>> ? GetEnv<E[number]> : never
+export type GetEnv<E> = E extends Fx<infer R, any> ? R : never
 
 export type UnionStateOf<H> = {
   readonly [K in keyof H]: H[K] extends (s: infer S, ...rest: any[]) => any ? S : never

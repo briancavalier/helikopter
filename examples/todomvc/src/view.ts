@@ -1,4 +1,4 @@
-import { TodoEditAction, TodoEditState } from './todoEdit'
+import { TodoEditAction } from './todoEdit'
 import { Filter, filterTodos } from './todoFilter'
 import { countActive, Todo, TodoAction } from './todoList'
 import { action } from '../../../packages/app/src'
