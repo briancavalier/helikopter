@@ -1,6 +1,6 @@
 {
   "name": "@helikopter/render-lit-html",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "dist/index.js",
   "module": "dist/index.m.js",
   "types": "dist/index.d.ts",
@@ -13,8 +13,8 @@
     "test": "tsc --noEmit"
   },
   "dependencies": {
-    "@helikopter/app": "^0.1.1",
-    "@helikopter/core": "^0.1.0"
+    "@helikopter/app": "^0.2.0",
+    "@helikopter/core": "^0.2.0"
   },
   "devDependencies": {
     "lit-html": "1.1.0",
