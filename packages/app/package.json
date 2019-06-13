@@ -20,6 +20,6 @@
   ],
   "devDependencies": {
     "microbundle": "0.11.0",
-    "typescript": "^3.5.1"
+    "typescript": "3.5.1"
   }
 }
